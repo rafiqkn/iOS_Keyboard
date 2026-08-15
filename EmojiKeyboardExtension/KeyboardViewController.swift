@@ -35,6 +35,7 @@ final class KeyboardViewController: UIInputViewController {
 
     private var state = KeyboardState()
     private var heightConstraint: NSLayoutConstraint?
+    private var appliedKeyboardHeight: CGFloat = 0
     private var lastShiftTapTime: TimeInterval = 0
     private var lastSpaceTapTime: TimeInterval = 0
     private var didSetInitialShiftState = false
@@ -49,13 +50,25 @@ final class KeyboardViewController: UIInputViewController {
         themeManager.reloadIfNeeded(for: textDocumentProxy.keyboardAppearance ?? .default, force: true)
         qwertyView.delegate = self
         installKeyboardView(qwertyView)
-        updateHeight(for: view.bounds.size)
+        updateHeight()
         updateAppearanceAndLayout()
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        updateHeight(for: view.bounds.size)
+        updateAppearanceAndLayout()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        updateHeight()
+        updateAppearanceAndLayout()
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        guard previousTraitCollection?.verticalSizeClass != traitCollection.verticalSizeClass else { return }
+        updateHeight()
         updateAppearanceAndLayout()
     }
 
@@ -64,7 +77,7 @@ final class KeyboardViewController: UIInputViewController {
         qwertyView.cancelActiveInteractions()
         coordinator.animate(alongsideTransition: nil) { [weak self] _ in
             guard let self else { return }
-            self.updateHeight(for: size)
+            self.updateHeight()
             self.updateAppearanceAndLayout(size: size)
         }
     }
@@ -73,7 +86,7 @@ final class KeyboardViewController: UIInputViewController {
         super.textDidChange(textInput)
         let themeChanged = themeManager.reloadIfNeeded(for: textDocumentProxy.keyboardAppearance ?? .default)
         if themeChanged {
-            updateHeight(for: view.bounds.size)
+            updateHeight()
         }
         updateAutomaticShiftIfNeeded()
         schedulePredictions()
@@ -105,7 +118,7 @@ final class KeyboardViewController: UIInputViewController {
             state.previousTextMode = state.mode
         }
         state.mode = mode
-        updateHeight(for: view.bounds.size)
+        updateHeight()
         if mode == .emoji {
             installKeyboardView(emojiView)
         } else {
@@ -117,22 +130,25 @@ final class KeyboardViewController: UIInputViewController {
         updateAppearanceAndLayout()
     }
 
-    private func updateHeight(for size: CGSize) {
-        let landscape = size.width > size.height && size.height > 0
+    private func updateHeight() {
+        let compactPhoneLandscape = traitCollection.userInterfaceIdiom == .phone &&
+            traitCollection.verticalSizeClass == .compact
         let themeKeyHeight = CGFloat(themeManager.currentTheme.keyHeight)
-        let rowSpacing: CGFloat = traitCollection.userInterfaceIdiom == .pad ? 7 : (landscape ? 3 : 6)
-        let verticalPadding: CGFloat = traitCollection.userInterfaceIdiom == .pad ? 8 : (landscape ? 4 : 7)
+        let rowSpacing: CGFloat = traitCollection.userInterfaceIdiom == .pad ? 7 : (compactPhoneLandscape ? 3 : 6)
+        let verticalPadding: CGFloat = traitCollection.userInterfaceIdiom == .pad ? 8 : (compactPhoneLandscape ? 4 : 7)
         let candidateBarHeight: CGFloat = 36
         let themedHeight = themeKeyHeight * 5 + rowSpacing * 4 + verticalPadding * 2 + candidateBarHeight
         let allowedRange: ClosedRange<CGFloat>
         if traitCollection.userInterfaceIdiom == .pad {
             allowedRange = 280...370
-        } else if landscape {
+        } else if compactPhoneLandscape {
             allowedRange = 190...230
         } else {
             allowedRange = 250...360
         }
         let height = min(max(themedHeight, allowedRange.lowerBound), allowedRange.upperBound)
+        guard abs(height - appliedKeyboardHeight) > 0.5 else { return }
+        appliedKeyboardHeight = height
         if heightConstraint == nil {
             let constraint = view.heightAnchor.constraint(equalToConstant: height)
             constraint.priority = .defaultHigh
