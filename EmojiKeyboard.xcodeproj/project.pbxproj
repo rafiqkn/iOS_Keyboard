@@ -12,7 +12,13 @@
 		100000000000000000000003 /* KeyboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000003 /* KeyboardViewController.swift */; };
 		100000000000000000000004 /* EmojiCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000004 /* EmojiCatalog.swift */; };
 		100000000000000000000005 /* EmojiCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000005 /* EmojiCell.swift */; };
-		100000000000000000000006 /* EmojiKeyboardExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 200000000000000000000007 /* EmojiKeyboardExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		100000000000000000000006 /* KnKeysKeyboard.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 200000000000000000000007 /* KnKeysKeyboard.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		100000000000000000000007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000009 /* Assets.xcassets */; };
+		100000000000000000000008 /* KeyboardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000010 /* KeyboardModels.swift */; };
+		100000000000000000000009 /* KeyboardLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000011 /* KeyboardLayout.swift */; };
+		10000000000000000000000A /* KeyboardKeyControl.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000012 /* KeyboardKeyControl.swift */; };
+		10000000000000000000000B /* QwertyKeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000013 /* QwertyKeyboardView.swift */; };
+		10000000000000000000000C /* EmojiKeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000014 /* EmojiKeyboardView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -32,7 +38,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				100000000000000000000006 /* EmojiKeyboardExtension.appex in Embed Foundation Extensions */,
+				100000000000000000000006 /* KnKeysKeyboard.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -46,8 +52,14 @@
 		200000000000000000000004 /* EmojiCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiCatalog.swift; sourceTree = "<group>"; };
 		200000000000000000000005 /* EmojiCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiCell.swift; sourceTree = "<group>"; };
 		200000000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		200000000000000000000007 /* EmojiKeyboardExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = EmojiKeyboardExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		200000000000000000000008 /* EmojiKeyboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EmojiKeyboard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		200000000000000000000007 /* KnKeysKeyboard.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = KnKeysKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		200000000000000000000008 /* KnKeys.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KnKeys.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		200000000000000000000009 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		200000000000000000000010 /* KeyboardModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardModels.swift; sourceTree = "<group>"; };
+		200000000000000000000011 /* KeyboardLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardLayout.swift; sourceTree = "<group>"; };
+		200000000000000000000012 /* KeyboardKeyControl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardKeyControl.swift; sourceTree = "<group>"; };
+		200000000000000000000013 /* QwertyKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QwertyKeyboardView.swift; sourceTree = "<group>"; };
+		200000000000000000000014 /* EmojiKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmojiKeyboardView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +94,7 @@
 			children = (
 				200000000000000000000001 /* EmojiKeyboardApp.swift */,
 				200000000000000000000002 /* ContentView.swift */,
+				200000000000000000000009 /* Assets.xcassets */,
 			);
 			path = EmojiKeyboard;
 			sourceTree = "<group>";
@@ -90,6 +103,11 @@
 			isa = PBXGroup;
 			children = (
 				200000000000000000000003 /* KeyboardViewController.swift */,
+				200000000000000000000010 /* KeyboardModels.swift */,
+				200000000000000000000011 /* KeyboardLayout.swift */,
+				200000000000000000000012 /* KeyboardKeyControl.swift */,
+				200000000000000000000013 /* QwertyKeyboardView.swift */,
+				200000000000000000000014 /* EmojiKeyboardView.swift */,
 				200000000000000000000004 /* EmojiCatalog.swift */,
 				200000000000000000000005 /* EmojiCell.swift */,
 				200000000000000000000006 /* Info.plist */,
@@ -100,8 +118,8 @@
 		600000000000000000000004 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				200000000000000000000008 /* EmojiKeyboard.app */,
-				200000000000000000000007 /* EmojiKeyboardExtension.appex */,
+				200000000000000000000008 /* KnKeys.app */,
+				200000000000000000000007 /* KnKeysKeyboard.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -124,8 +142,8 @@
 				300000000000000000000002 /* PBXTargetDependency */,
 			);
 			name = EmojiKeyboard;
-			productName = EmojiKeyboard;
-			productReference = 200000000000000000000008 /* EmojiKeyboard.app */;
+			productName = KnKeys;
+			productReference = 200000000000000000000008 /* KnKeys.app */;
 			productType = "com.apple.product-type.application";
 		};
 		700000000000000000000002 /* EmojiKeyboardExtension */ = {
@@ -141,8 +159,8 @@
 			dependencies = (
 			);
 			name = EmojiKeyboardExtension;
-			productName = EmojiKeyboardExtension;
-			productReference = 200000000000000000000007 /* EmojiKeyboardExtension.appex */;
+			productName = KnKeysKeyboard;
+			productReference = 200000000000000000000007 /* KnKeysKeyboard.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -187,6 +205,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				100000000000000000000007 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -214,6 +233,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				100000000000000000000003 /* KeyboardViewController.swift in Sources */,
+				100000000000000000000008 /* KeyboardModels.swift in Sources */,
+				100000000000000000000009 /* KeyboardLayout.swift in Sources */,
+				10000000000000000000000A /* KeyboardKeyControl.swift in Sources */,
+				10000000000000000000000B /* QwertyKeyboardView.swift in Sources */,
+				10000000000000000000000C /* EmojiKeyboardView.swift in Sources */,
 				100000000000000000000004 /* EmojiCatalog.swift in Sources */,
 				100000000000000000000005 /* EmojiCell.swift in Sources */,
 			);
@@ -313,17 +337,20 @@
 		B00000000000000000000003 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = AH34H7VVG5;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Emoji Keyboard";
+				INFOPLIST_KEY_CFBundleDisplayName = KnKeys;
+				INFOPLIST_KEY_CFBundleName = KnKeys;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ah34h7vvg5.typeflow;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.rafiqkn.KnKeys;
+				PRODUCT_NAME = KnKeys;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -333,17 +360,20 @@
 		B00000000000000000000004 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = AH34H7VVG5;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Emoji Keyboard";
+				INFOPLIST_KEY_CFBundleDisplayName = KnKeys;
+				INFOPLIST_KEY_CFBundleName = KnKeys;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ah34h7vvg5.typeflow;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.rafiqkn.KnKeys;
+				PRODUCT_NAME = KnKeys;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -355,13 +385,14 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = AH34H7VVG5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EmojiKeyboardExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ah34h7vvg5.typeflow.keyboard;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.rafiqkn.KnKeys.KeyboardExtension;
+				PRODUCT_NAME = KnKeysKeyboard;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -374,13 +405,14 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
+				DEVELOPMENT_TEAM = AH34H7VVG5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EmojiKeyboardExtension/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ah34h7vvg5.typeflow.keyboard;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.rafiqkn.KnKeys.KeyboardExtension;
+				PRODUCT_NAME = KnKeysKeyboard;
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

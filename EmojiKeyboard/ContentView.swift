@@ -7,14 +7,14 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Enable Emoji Keyboard") {
+                Section("Enable KnKeys") {
                     SetupRow(number: "1", title: "Open Settings", detail: "General > Keyboard > Keyboards")
-                    SetupRow(number: "2", title: "Add New Keyboard", detail: "Choose Emoji Keyboard")
+                    SetupRow(number: "2", title: "Add New Keyboard", detail: "Choose KnKeys")
                     SetupRow(number: "3", title: "Switch Keyboards", detail: "Tap the globe while typing")
                 }
 
                 Section("Try It") {
-                    TextField("Tap here, then select Emoji Keyboard", text: $sampleText, axis: .vertical)
+                    TextField("Tap here, then select KnKeys", text: $sampleText, axis: .vertical)
                         .lineLimit(3...6)
                         .textInputAutocapitalization(.sentences)
                 }
@@ -30,11 +30,11 @@ struct ContentView: View {
 
                 Section("Privacy") {
                     Label("No Full Access required", systemImage: "lock.shield.fill")
-                    Text("Emoji Keyboard works offline and does not collect or transmit what you type.")
+                    Text("KnKeys works offline and does not collect or transmit what you type.")
                         .foregroundStyle(.secondary)
                 }
             }
-            .navigationTitle("Emoji Keyboard")
+            .navigationTitle("KnKeys")
         }
     }
 }

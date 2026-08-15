@@ -1,10 +1,12 @@
-# Emoji Keyboard for iOS
+# KnKeys for iOS
 
-A native, offline custom iOS keyboard that inserts Unicode emoji without requesting Full Access.
+A native, offline custom iOS keyboard with a lightweight QWERTY layout and emoji mode. It inserts Unicode text without requesting Full Access.
 
 ## Features
 
-- Nine emoji categories with a scrollable grid
+- Standard QWERTY layout with a permanent number row
+- Shift, Caps Lock, delete repeat, adaptive return, and double-space period
+- Emoji mode with nine categories and a scrollable grid
 - Emoji insertion through `textDocumentProxy`
 - Globe, space, delete, and return keys
 - Light and dark keyboard appearances
@@ -23,19 +25,24 @@ A native, offline custom iOS keyboard that inserts Unicode emoji without request
 1. Open `EmojiKeyboard.xcodeproj` in Xcode.
 2. Select the `EmojiKeyboard` project and choose your Development Team for both targets.
 3. Confirm that the extension bundle identifier remains a child of the app identifier:
-   - App: `com.rafiqkn.EmojiKeyboard`
-   - Extension: `com.rafiqkn.EmojiKeyboard.KeyboardExtension`
+   - App: `com.rafiqkn.KnKeys`
+   - Extension: `com.rafiqkn.KnKeys.KeyboardExtension`
 4. Select the `EmojiKeyboard` scheme and run it on an iPhone, iPad, or simulator.
 5. Open Settings and go to **General > Keyboard > Keyboards > Add New Keyboard**.
-6. Choose **Emoji Keyboard**.
-7. Open a text field and use the globe key to switch to Emoji Keyboard.
+6. Choose **KnKeys**.
+7. Open a text field and use the globe key to switch to KnKeys.
+8. Use the face button to open emoji mode and the keyboard button to return to QWERTY.
 
 Full Access is not required. The extension inserts local Unicode text and does not use the network or pasteboard.
 
 ## Project Structure
 
 - `EmojiKeyboard/`: SwiftUI host app
-- `EmojiKeyboardExtension/KeyboardViewController.swift`: keyboard layout and input behavior
+- `EmojiKeyboardExtension/KeyboardViewController.swift`: keyboard coordinator and input behavior
+- `EmojiKeyboardExtension/KeyboardModels.swift`: keyboard state and actions
+- `EmojiKeyboardExtension/KeyboardLayout.swift`: data-driven QWERTY, number, and symbol rows
+- `EmojiKeyboardExtension/QwertyKeyboardView.swift`: responsive QWERTY view
+- `EmojiKeyboardExtension/EmojiKeyboardView.swift`: existing emoji grid view
 - `EmojiKeyboardExtension/EmojiCatalog.swift`: categorized emoji data
 - `EmojiKeyboardExtension/EmojiCell.swift`: reusable emoji grid cell
 - `EmojiKeyboardExtension/Info.plist`: keyboard extension configuration
