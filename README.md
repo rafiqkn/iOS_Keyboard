@@ -6,6 +6,10 @@ A native, offline custom iOS keyboard with a lightweight QWERTY layout and emoji
 
 - Standard QWERTY layout with a permanent number row
 - Home-row left-swipe deletion with configurable character and word thresholds
+- Theme settings with Automatic, Light, Dark, and Custom modes
+- Custom key, keyboard, function-key, accent-key, text, and suggestion-bar colors
+- Configurable corner radius, bounded key height, and font size
+- Live theme preview in the host app
 - Shift, Caps Lock, delete repeat, adaptive return, and double-space period
 - Emoji mode with nine categories and a scrollable grid
 - Emoji insertion through `textDocumentProxy`
@@ -36,9 +40,14 @@ A native, offline custom iOS keyboard with a lightweight QWERTY layout and emoji
 
 Full Access is not required. The extension inserts local Unicode text and does not use the network or pasteboard.
 
+Theme settings are available from the host app under **Themes** and are shared with the keyboard through the KnKeys App Group. The suggestion-bar color is stored and displayed in the preview; the suggestion bar itself is not enabled yet.
+
 ## Project Structure
 
 - `EmojiKeyboard/`: SwiftUI host app
+- `EmojiKeyboard/ThemeSettingsView.swift`: custom theme editor and live preview
+- `Shared/KeyboardTheme.swift`: shared theme model, validation, and App Group storage
+- `EmojiKeyboardExtension/ThemeManager.swift`: revision-cached theme resolution
 - `EmojiKeyboardExtension/KeyboardViewController.swift`: keyboard coordinator and input behavior
 - `EmojiKeyboardExtension/KeyboardModels.swift`: keyboard state and actions
 - `EmojiKeyboardExtension/KeyboardLayout.swift`: data-driven QWERTY, number, and symbol rows

@@ -20,6 +20,12 @@ struct ContentView: View {
                 }
 
                 Section {
+                    NavigationLink {
+                        ThemeSettingsView()
+                    } label: {
+                        Label("Themes", systemImage: "paintpalette.fill")
+                    }
+
                     Button {
                         guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
                         UIApplication.shared.open(url)

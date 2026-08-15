@@ -86,7 +86,11 @@ struct KeyboardMetrics: Equatable {
     let characterFontSize: CGFloat
     let functionFontSize: CGFloat
 
-    static func resolve(for size: CGSize, idiom: UIUserInterfaceIdiom) -> KeyboardMetrics {
+    static func resolve(
+        for size: CGSize,
+        idiom: UIUserInterfaceIdiom,
+        theme: KeyboardTheme
+    ) -> KeyboardMetrics {
         let landscape = size.width > size.height
         if idiom == .pad {
             return KeyboardMetrics(
@@ -94,9 +98,9 @@ struct KeyboardMetrics: Equatable {
                 verticalPadding: 8,
                 rowSpacing: 7,
                 keySpacing: 6,
-                cornerRadius: 6,
-                characterFontSize: 22,
-                functionFontSize: 15
+                cornerRadius: CGFloat(theme.keyCornerRadius),
+                characterFontSize: CGFloat(theme.fontSize),
+                functionFontSize: min(CGFloat(theme.fontSize), 20)
             )
         }
         return KeyboardMetrics(
@@ -104,9 +108,9 @@ struct KeyboardMetrics: Equatable {
             verticalPadding: landscape ? 4 : 7,
             rowSpacing: landscape ? 3 : 6,
             keySpacing: landscape ? 4 : 5,
-            cornerRadius: 5,
-            characterFontSize: landscape ? 18 : 22,
-            functionFontSize: landscape ? 13 : 15
+            cornerRadius: CGFloat(theme.keyCornerRadius),
+            characterFontSize: landscape ? min(CGFloat(theme.fontSize), 22) : CGFloat(theme.fontSize),
+            functionFontSize: landscape ? min(CGFloat(theme.fontSize) * 0.7, 16) : min(CGFloat(theme.fontSize) * 0.72, 18)
         )
     }
 }

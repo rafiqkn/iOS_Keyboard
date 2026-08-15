@@ -12,7 +12,8 @@ final class EmojiKeyboardView: UIView {
     private let categories = EmojiCatalog.categories
     private var selectedCategoryIndex = 0
     private var categoryButtons: [UIButton] = []
-    private var darkMode = false
+    private var controlButtons: [UIButton] = []
+    private var theme = KeyboardTheme.light
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -51,23 +52,22 @@ final class EmojiKeyboardView: UIView {
         collectionView.collectionViewLayout.invalidateLayout()
     }
 
-    func updateAppearance(darkMode: Bool) {
-        self.darkMode = darkMode
-        backgroundColor = darkMode
-            ? UIColor(red: 0.13, green: 0.13, blue: 0.14, alpha: 1)
-            : UIColor(red: 0.82, green: 0.84, blue: 0.87, alpha: 1)
+    func updateAppearance(theme: KeyboardTheme) {
+        self.theme = theme
+        backgroundColor = theme.keyboardBackground.uiColor
 
         categoryButtons.forEach { button in
             let selected = button.tag == selectedCategoryIndex
-            button.tintColor = selected ? .systemBlue : (darkMode ? .lightGray : .darkGray)
-            button.backgroundColor = selected ? UIColor.systemBlue.withAlphaComponent(0.14) : .clear
+            button.tintColor = selected ? theme.accentKeyBackground.uiColor : theme.textColor.uiColor
+            button.backgroundColor = selected ? theme.accentKeyBackground.uiColor.withAlphaComponent(0.35) : .clear
+            button.layer.cornerRadius = CGFloat(theme.keyCornerRadius)
         }
-        for case let stack as UIStackView in subviews {
-            for case let button as UIButton in stack.arrangedSubviews where stack !== categoryStack {
-                button.tintColor = darkMode ? .white : .black
-                button.setTitleColor(darkMode ? .white : .black, for: .normal)
-                button.backgroundColor = darkMode ? .systemGray3 : .white
-            }
+        controlButtons.forEach { button in
+            button.tintColor = theme.textColor.uiColor
+            button.setTitleColor(theme.textColor.uiColor, for: .normal)
+            button.backgroundColor = theme.keyBackground.uiColor
+            button.layer.cornerRadius = CGFloat(theme.keyCornerRadius)
+            button.titleLabel?.font = .systemFont(ofSize: min(CGFloat(theme.fontSize), 20))
         }
     }
 
@@ -101,7 +101,7 @@ final class EmojiKeyboardView: UIView {
             controls.heightAnchor.constraint(equalToConstant: 42)
         ])
         selectCategory(at: 0)
-        updateAppearance(darkMode: false)
+        updateAppearance(theme: .light)
     }
 
     private func makeControlBar() -> UIView {
@@ -117,7 +117,8 @@ final class EmojiKeyboardView: UIView {
         let returnButton = makeKeyButton(symbol: "return", accessibilityLabel: "Return")
         returnButton.addTarget(self, action: #selector(insertReturn), for: .touchUpInside)
 
-        let stack = UIStackView(arrangedSubviews: [globeButton, keyboardButton, spaceButton, deleteButton, returnButton])
+        controlButtons = [globeButton, keyboardButton, spaceButton, deleteButton, returnButton]
+        let stack = UIStackView(arrangedSubviews: controlButtons)
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.axis = .horizontal
         stack.spacing = 6
@@ -152,7 +153,7 @@ final class EmojiKeyboardView: UIView {
         selectedCategoryIndex = index
         collectionView.reloadData()
         collectionView.setContentOffset(.zero, animated: false)
-        updateAppearance(darkMode: darkMode)
+        updateAppearance(theme: theme)
         UIAccessibility.post(notification: .announcement, argument: categories[index].title)
     }
 

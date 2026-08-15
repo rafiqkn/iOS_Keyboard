@@ -2,6 +2,7 @@ import UIKit
 
 final class KeyboardViewController: UIInputViewController {
     private let qwertyView = QwertyKeyboardView()
+    private let themeManager = ThemeManager()
     private lazy var emojiView: EmojiKeyboardView = {
         let view = EmojiKeyboardView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -17,6 +18,7 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        themeManager.reloadIfNeeded(for: textDocumentProxy.keyboardAppearance ?? .default, force: true)
         qwertyView.delegate = self
         installKeyboardView(qwertyView)
         updateHeight(for: view.bounds.size)
@@ -41,6 +43,10 @@ final class KeyboardViewController: UIInputViewController {
 
     override func textDidChange(_ textInput: UITextInput?) {
         super.textDidChange(textInput)
+        let themeChanged = themeManager.reloadIfNeeded(for: textDocumentProxy.keyboardAppearance ?? .default)
+        if themeChanged {
+            updateHeight(for: view.bounds.size)
+        }
         updateAutomaticShiftIfNeeded()
         updateAppearanceAndLayout()
     }
@@ -79,12 +85,19 @@ final class KeyboardViewController: UIInputViewController {
 
     private func updateHeight(for size: CGSize) {
         let landscape = size.width > size.height && size.height > 0
-        let height: CGFloat
+        let themeKeyHeight = CGFloat(themeManager.currentTheme.keyHeight)
+        let rowSpacing: CGFloat = traitCollection.userInterfaceIdiom == .pad ? 7 : (landscape ? 3 : 6)
+        let verticalPadding: CGFloat = traitCollection.userInterfaceIdiom == .pad ? 8 : (landscape ? 4 : 7)
+        let themedHeight = themeKeyHeight * 5 + rowSpacing * 4 + verticalPadding * 2
+        let allowedRange: ClosedRange<CGFloat>
         if traitCollection.userInterfaceIdiom == .pad {
-            height = landscape ? 320 : 350
+            allowedRange = 280...350
+        } else if landscape {
+            allowedRange = 190...230
         } else {
-            height = landscape ? 220 : 300
+            allowedRange = 250...320
         }
+        let height = min(max(themedHeight, allowedRange.lowerBound), allowedRange.upperBound)
         if heightConstraint == nil {
             let constraint = view.heightAnchor.constraint(equalToConstant: height)
             constraint.priority = .defaultHigh
@@ -96,18 +109,16 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func updateAppearanceAndLayout(size: CGSize? = nil) {
-        let darkMode = textDocumentProxy.keyboardAppearance == .dark
-        view.backgroundColor = darkMode
-            ? UIColor(red: 0.13, green: 0.13, blue: 0.14, alpha: 1)
-            : UIColor(red: 0.82, green: 0.84, blue: 0.87, alpha: 1)
+        let theme = themeManager.currentTheme
+        view.backgroundColor = theme.keyboardBackground.uiColor
         qwertyView.update(
             state: state,
-            darkMode: darkMode,
+            theme: theme,
             size: size ?? view.bounds.size,
             returnKeyTitle: returnKeyTitle
         )
         if state.mode == .emoji {
-            emojiView.updateAppearance(darkMode: darkMode)
+            emojiView.updateAppearance(theme: theme)
         }
     }
 

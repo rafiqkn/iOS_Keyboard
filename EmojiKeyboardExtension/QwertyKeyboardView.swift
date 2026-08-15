@@ -12,7 +12,7 @@ final class QwertyKeyboardView: UIView {
     private var state = KeyboardState()
     private var keyControls: [KeyboardKeyControl] = []
     private var metrics: KeyboardMetrics?
-    private var darkMode = false
+    private var theme = KeyboardTheme.light
     private var returnKeyTitle = "return"
     private let gestureConfiguration = GestureDeletionConfiguration.standard
     private var homeRowGesture: HorizontalDeletionGestureRecognizer?
@@ -56,13 +56,18 @@ final class QwertyKeyboardView: UIView {
         homeRowGesture?.cancel()
     }
 
-    func update(state: KeyboardState, darkMode: Bool, size: CGSize, returnKeyTitle: String) {
+    func update(state: KeyboardState, theme: KeyboardTheme, size: CGSize, returnKeyTitle: String) {
         let modeChanged = self.state.mode != state.mode
         let shiftChanged = self.state.shift != state.shift
+        let themeChanged = self.theme != theme
         self.state = state
-        self.darkMode = darkMode
+        self.theme = theme
         self.returnKeyTitle = returnKeyTitle
-        let nextMetrics = KeyboardMetrics.resolve(for: size, idiom: traitCollection.userInterfaceIdiom)
+        let nextMetrics = KeyboardMetrics.resolve(
+            for: size,
+            idiom: traitCollection.userInterfaceIdiom,
+            theme: theme
+        )
 
         if modeChanged {
             homeRowGesture = nil
@@ -70,7 +75,7 @@ final class QwertyKeyboardView: UIView {
         } else if shiftChanged {
             updateLetterCase()
         }
-        if metrics != nextMetrics {
+        if metrics != nextMetrics || themeChanged {
             metrics = nextMetrics
             rowsStack.spacing = nextMetrics.rowSpacing
             topConstraint.constant = nextMetrics.verticalPadding
@@ -168,7 +173,7 @@ final class QwertyKeyboardView: UIView {
             if key.action == .returnKey {
                 key.setTitle(returnKeyTitle)
             }
-            key.update(metrics: metrics, darkMode: darkMode, selected: selected)
+            key.update(metrics: metrics, theme: theme, selected: selected)
         }
     }
 

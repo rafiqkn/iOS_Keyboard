@@ -7,7 +7,7 @@ final class KeyboardKeyControl: UIControl {
     private let titleLabel = UILabel()
     private let imageView = UIImageView()
     private let keyStyle: KeyboardKeyStyle
-    private var darkMode = false
+    private var theme = KeyboardTheme.light
 
     init(descriptor: KeyboardKeyDescriptor) {
         action = descriptor.action
@@ -74,8 +74,8 @@ final class KeyboardKeyControl: UIControl {
         imageView.image = UIImage(systemName: symbolName)
     }
 
-    func update(metrics: KeyboardMetrics, darkMode: Bool, selected: Bool = false) {
-        self.darkMode = darkMode
+    func update(metrics: KeyboardMetrics, theme: KeyboardTheme, selected: Bool = false) {
+        self.theme = theme
         layer.cornerRadius = metrics.cornerRadius
         titleLabel.font = .systemFont(
             ofSize: keyStyle == .character ? metrics.characterFontSize : metrics.functionFontSize,
@@ -87,22 +87,27 @@ final class KeyboardKeyControl: UIControl {
 
     private func applyColors(selected: Bool? = nil) {
         let isSelected = selected ?? accessibilityTraits.contains(.selected)
-        let foreground: UIColor = darkMode ? .white : .black
+        let foreground = theme.textColor.uiColor
         titleLabel.textColor = foreground
         imageView.tintColor = foreground
 
         if keyStyle == .spacer {
             backgroundColor = .clear
         } else if isHighlighted {
-            backgroundColor = darkMode ? .systemGray : .systemGray3
-        } else if isSelected || keyStyle == .accent {
-            backgroundColor = isSelected
-                ? UIColor.systemBlue.withAlphaComponent(darkMode ? 0.75 : 0.9)
-                : (darkMode ? .systemGray2 : .systemGray4)
-        } else if keyStyle == .character || keyStyle == .space {
-            backgroundColor = darkMode ? UIColor(white: 0.35, alpha: 1) : .white
+            backgroundColor = theme.keyBackground.uiColor.withAlphaComponent(0.72)
+        } else if isSelected {
+            backgroundColor = theme.accentKeyBackground.uiColor
         } else {
-            backgroundColor = darkMode ? UIColor(white: 0.22, alpha: 1) : UIColor(white: 0.68, alpha: 1)
+            switch keyStyle {
+            case .character, .space:
+                backgroundColor = theme.keyBackground.uiColor
+            case .function:
+                backgroundColor = theme.functionKeyBackground.uiColor
+            case .accent:
+                backgroundColor = theme.accentKeyBackground.uiColor
+            case .spacer:
+                backgroundColor = .clear
+            }
         }
     }
 }
