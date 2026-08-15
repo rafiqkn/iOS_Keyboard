@@ -4,6 +4,9 @@ final class KeyboardKeyControl: UIControl {
     private(set) var action: KeyboardKeyAction
     let widthUnit: CGFloat
 
+    var onTouchDown: ((KeyboardKeyControl) -> Void)?
+    var onTouchEnded: (() -> Void)?
+
     private let titleLabel = UILabel()
     private let imageView = UIImageView()
     private let keyStyle: KeyboardKeyStyle
@@ -48,6 +51,12 @@ final class KeyboardKeyControl: UIControl {
         layer.shadowRadius = 0
         layer.shadowOpacity = keyStyle == .spacer ? 0 : 0.25
         isUserInteractionEnabled = keyStyle != .spacer
+        addTarget(self, action: #selector(notifyTouchDown), for: .touchDown)
+        addTarget(
+            self,
+            action: #selector(notifyTouchEnded),
+            for: [.touchUpInside, .touchUpOutside, .touchCancel, .touchDragExit]
+        )
     }
 
     required init?(coder: NSCoder) {
@@ -83,6 +92,19 @@ final class KeyboardKeyControl: UIControl {
         )
         accessibilityTraits = selected ? [.keyboardKey, .selected] : .keyboardKey
         applyColors(selected: selected)
+    }
+
+    var popupText: String? {
+        guard case .character(let value) = action else { return nil }
+        return value
+    }
+
+    @objc private func notifyTouchDown() {
+        onTouchDown?(self)
+    }
+
+    @objc private func notifyTouchEnded() {
+        onTouchEnded?()
     }
 
     private func applyColors(selected: Bool? = nil) {

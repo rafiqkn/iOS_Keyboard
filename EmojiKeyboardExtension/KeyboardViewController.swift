@@ -1,5 +1,11 @@
 import UIKit
 
+private struct PredictionDisplayRecord {
+    let replacementCount: Int
+    let expectedSuffix: String
+    let generation: Int
+}
+
 private struct SwipeInsertionRecord {
     let insertedCount: Int
     let leadingSpace: Bool
@@ -9,9 +15,15 @@ private struct SwipeInsertionRecord {
 final class KeyboardViewController: UIInputViewController {
     private let qwertyView = QwertyKeyboardView()
     private let themeManager = ThemeManager()
+    private let feedbackManager = KeyboardFeedbackManager()
     private lazy var swipeTypingEngine = SwipeTypingEngine()
+    private lazy var wordPredictionEngine = BasicWordPredictionEngine()
     private let swipeRecognitionQueue = DispatchQueue(
         label: "com.rafiqkn.KnKeys.swipe-recognition",
+        qos: .userInitiated
+    )
+    private let predictionQueue = DispatchQueue(
+        label: "com.rafiqkn.KnKeys.word-prediction",
         qos: .userInitiated
     )
     private lazy var emojiView: EmojiKeyboardView = {
@@ -27,6 +39,8 @@ final class KeyboardViewController: UIInputViewController {
     private var lastSpaceTapTime: TimeInterval = 0
     private var didSetInitialShiftState = false
     private var swipeGeneration = 0
+    private var predictionGeneration = 0
+    private var latestPrediction: PredictionDisplayRecord?
     private var swipeInsertedTrailingSpace = false
     private var lastSwipeInsertion: SwipeInsertionRecord?
 
@@ -62,6 +76,7 @@ final class KeyboardViewController: UIInputViewController {
             updateHeight(for: view.bounds.size)
         }
         updateAutomaticShiftIfNeeded()
+        schedulePredictions()
         updateAppearanceAndLayout()
     }
 
@@ -82,6 +97,9 @@ final class KeyboardViewController: UIInputViewController {
     private func setMode(_ mode: KeyboardMode) {
         guard state.mode != mode else { return }
         swipeGeneration += 1
+        predictionGeneration += 1
+        latestPrediction = nil
+        qwertyView.showCandidates(.hidden)
         qwertyView.cancelActiveInteractions()
         if state.mode != .emoji {
             state.previousTextMode = state.mode
@@ -103,14 +121,15 @@ final class KeyboardViewController: UIInputViewController {
         let themeKeyHeight = CGFloat(themeManager.currentTheme.keyHeight)
         let rowSpacing: CGFloat = traitCollection.userInterfaceIdiom == .pad ? 7 : (landscape ? 3 : 6)
         let verticalPadding: CGFloat = traitCollection.userInterfaceIdiom == .pad ? 8 : (landscape ? 4 : 7)
-        let themedHeight = themeKeyHeight * 5 + rowSpacing * 4 + verticalPadding * 2
+        let candidateBarHeight: CGFloat = state.mode == .letters ? 36 : 0
+        let themedHeight = themeKeyHeight * 5 + rowSpacing * 4 + verticalPadding * 2 + candidateBarHeight
         let allowedRange: ClosedRange<CGFloat>
         if traitCollection.userInterfaceIdiom == .pad {
-            allowedRange = 280...350
+            allowedRange = 280...370
         } else if landscape {
             allowedRange = 190...230
         } else {
-            allowedRange = 250...320
+            allowedRange = 250...360
         }
         let height = min(max(themedHeight, allowedRange.lowerBound), allowedRange.upperBound)
         if heightConstraint == nil {
@@ -129,6 +148,10 @@ final class KeyboardViewController: UIInputViewController {
         qwertyView.updateDeletionFeedbackAnimation(
             enabled: themeManager.deletionFeedbackAnimationEnabled
         )
+        qwertyView.updateKeyPopup(
+            enabled: themeManager.interactionSettings.keyPopupEnabled
+        )
+        feedbackManager.soundMode = themeManager.interactionSettings.keystrokeSoundMode
         qwertyView.update(
             state: state,
             theme: theme,
@@ -142,12 +165,13 @@ final class KeyboardViewController: UIInputViewController {
 
     private func handle(_ action: KeyboardKeyAction) {
         switch action {
-        case .swipePath, .swipeAlternative:
+        case .swipePath, .swipeAlternative, .predictionSelected:
             break
         default:
             swipeGeneration += 1
             lastSwipeInsertion = nil
-            qwertyView.showSwipeCandidates([])
+            latestPrediction = nil
+            qwertyView.showCandidates(.hidden)
         }
         switch action {
         case .character(let text):
@@ -156,6 +180,7 @@ final class KeyboardViewController: UIInputViewController {
             }
             swipeInsertedTrailingSpace = false
             insertText(text)
+            schedulePredictions()
             if state.mode == .letters && state.shift == .on {
                 state.shift = .off
                 updateAppearanceAndLayout()
@@ -167,12 +192,15 @@ final class KeyboardViewController: UIInputViewController {
             textDocumentProxy.deleteBackward()
             playInputClick()
             updateAutomaticShiftIfNeeded()
+            schedulePredictions()
         case .space:
             swipeInsertedTrailingSpace = false
             insertSpace()
+            schedulePredictions()
         case .returnKey:
             swipeInsertedTrailingSpace = false
             insertText("\n")
+            schedulePredictions()
             if state.mode == .letters && state.shift != .capsLock {
                 state.shift = .on
                 updateAppearanceAndLayout()
@@ -187,12 +215,74 @@ final class KeyboardViewController: UIInputViewController {
             recognizeSwipe(path)
         case .swipeAlternative(let word):
             replaceLastSwipeWord(with: word)
+        case .predictionSelected(let word):
+            applyPrediction(word)
         case .spacer:
             break
         }
     }
 
+    private func schedulePredictions() {
+        guard lastSwipeInsertion == nil else { return }
+        guard state.mode == .letters,
+              let context = TextContextParser.parse(
+                before: textDocumentProxy.documentContextBeforeInput,
+                after: textDocumentProxy.documentContextAfterInput
+              ) else {
+            predictionGeneration += 1
+            latestPrediction = nil
+            qwertyView.showCandidates(.hidden)
+            return
+        }
+
+        predictionGeneration += 1
+        let generation = predictionGeneration
+        let engine = wordPredictionEngine
+        predictionQueue.asyncAfter(deadline: .now() + 0.04) { [weak self] in
+            guard let self, generation == self.predictionGeneration else { return }
+            let predictions = engine.predict(for: context)
+            DispatchQueue.main.async { [weak self] in
+                guard let self,
+                      generation == self.predictionGeneration,
+                      self.state.mode == .letters else { return }
+                guard !predictions.isEmpty else {
+                    self.latestPrediction = nil
+                    self.qwertyView.showCandidates(.hidden)
+                    return
+                }
+                self.latestPrediction = PredictionDisplayRecord(
+                    replacementCount: context.replacementCount,
+                    expectedSuffix: context.currentWord,
+                    generation: generation
+                )
+                self.qwertyView.showCandidates(.predictions(predictions.map(\.word)))
+            }
+        }
+    }
+
+    private func applyPrediction(_ word: String) {
+        guard let record = latestPrediction,
+              record.generation == predictionGeneration else { return }
+        let currentContext = textDocumentProxy.documentContextBeforeInput ?? ""
+        guard currentContext.lowercased().hasSuffix(record.expectedSuffix.lowercased()) else {
+            latestPrediction = nil
+            qwertyView.showCandidates(.hidden)
+            return
+        }
+        for _ in 0..<record.replacementCount {
+            textDocumentProxy.deleteBackward()
+        }
+        textDocumentProxy.insertText(word + " ")
+        latestPrediction = nil
+        qwertyView.showCandidates(.hidden)
+        playInputClick()
+        schedulePredictions()
+    }
+
     private func recognizeSwipe(_ path: SwipePath) {
+        predictionGeneration += 1
+        latestPrediction = nil
+        qwertyView.showCandidates(.hidden)
         swipeGeneration += 1
         let generation = swipeGeneration
         swipeRecognitionQueue.async { [weak self] in
@@ -204,7 +294,7 @@ final class KeyboardViewController: UIInputViewController {
                       self.state.mode == .letters,
                       let result else { return }
                 self.insertSwipeWord(result.word)
-                self.qwertyView.showSwipeCandidates(result.alternatives)
+                self.qwertyView.showCandidates(.swipeAlternatives(result.alternatives))
             }
         }
     }
@@ -271,6 +361,7 @@ final class KeyboardViewController: UIInputViewController {
         if count > 0 {
             playInputClick()
             updateAutomaticShiftIfNeeded()
+            schedulePredictions()
         }
     }
 
@@ -364,7 +455,7 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func playInputClick() {
-        UIDevice.current.playInputClick()
+        feedbackManager.playKeyClick()
     }
 }
 

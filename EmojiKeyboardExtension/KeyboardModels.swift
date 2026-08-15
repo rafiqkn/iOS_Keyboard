@@ -13,6 +13,12 @@ enum ShiftState: Equatable {
     case capsLock
 }
 
+enum CandidateBarContent: Equatable {
+    case hidden
+    case predictions([String])
+    case swipeAlternatives([String])
+}
+
 enum KeyboardKeyAction: Equatable {
     case character(String)
     case shift
@@ -24,6 +30,7 @@ enum KeyboardKeyAction: Equatable {
     case gestureDelete(GestureDeletionLevel)
     case swipePath(SwipePath)
     case swipeAlternative(String)
+    case predictionSelected(String)
     case spacer
 }
 

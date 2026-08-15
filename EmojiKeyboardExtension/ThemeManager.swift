@@ -18,7 +18,11 @@ final class ThemeManager {
     private var customTheme = KeyboardTheme.light
     private var cachedAppearance: UIKeyboardAppearance?
     private(set) var currentTheme = KeyboardTheme.light
-    private(set) var deletionFeedbackAnimationEnabled = false
+    private(set) var interactionSettings = KeyboardInteractionSettings.defaults
+
+    var deletionFeedbackAnimationEnabled: Bool {
+        interactionSettings.deletionFeedbackAnimation
+    }
 
     init(store: ThemeStore = ThemeStore()) {
         self.store = store
@@ -33,7 +37,7 @@ final class ThemeManager {
         if force || revision != loadedRevision {
             selection = store.loadSelection()
             customTheme = store.loadCustomTheme()
-            deletionFeedbackAnimationEnabled = store.loadDeletionFeedbackAnimation()
+            interactionSettings = store.loadInteractionSettings()
             loadedRevision = revision
         }
         cachedAppearance = appearance

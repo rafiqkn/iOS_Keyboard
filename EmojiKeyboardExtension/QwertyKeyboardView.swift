@@ -11,6 +11,8 @@ final class QwertyKeyboardView: UIView {
     private let suggestionStack = UIStackView()
     private var state = KeyboardState()
     private var keyControls: [KeyboardKeyControl] = []
+    private var rowHeightConstraints: [NSLayoutConstraint] = []
+    private var lastLayoutSize = CGSize.zero
     private var metrics: KeyboardMetrics?
     private var theme = KeyboardTheme.light
     private var returnKeyTitle = "return"
@@ -18,6 +20,9 @@ final class QwertyKeyboardView: UIView {
     private var homeRowGesture: HorizontalDeletionGestureRecognizer?
     private weak var homeRowView: UIView?
     private var deletionFeedbackAnimationEnabled = false
+    private lazy var keyPopupPresenter = KeyPopupPresenter(container: self)
+    private var candidateBarContent = CandidateBarContent.hidden
+    private var candidateHeightConstraint: NSLayoutConstraint!
     private var deleteDelayWorkItem: DispatchWorkItem?
     private var deleteRepeatTimer: Timer?
     private var topConstraint: NSLayoutConstraint!
@@ -37,22 +42,23 @@ final class QwertyKeyboardView: UIView {
         suggestionStack.layer.cornerRadius = 6
         suggestionStack.clipsToBounds = true
         rowsStack.axis = .vertical
-        rowsStack.distribution = .fillEqually
+        rowsStack.distribution = .fill
         addSubview(rowsStack)
         addSubview(suggestionStack)
-        topConstraint = rowsStack.topAnchor.constraint(equalTo: topAnchor)
+        candidateHeightConstraint = suggestionStack.heightAnchor.constraint(equalToConstant: 34)
+        topConstraint = rowsStack.topAnchor.constraint(equalTo: suggestionStack.bottomAnchor, constant: 2)
         leadingConstraint = rowsStack.leadingAnchor.constraint(equalTo: leadingAnchor)
         trailingConstraint = rowsStack.trailingAnchor.constraint(equalTo: trailingAnchor)
-        bottomConstraint = rowsStack.bottomAnchor.constraint(equalTo: bottomAnchor)
+        bottomConstraint = rowsStack.bottomAnchor.constraint(lessThanOrEqualTo: bottomAnchor)
         NSLayoutConstraint.activate([
             topConstraint,
             leadingConstraint,
             trailingConstraint,
             bottomConstraint,
             suggestionStack.topAnchor.constraint(equalTo: topAnchor, constant: 4),
-            suggestionStack.centerXAnchor.constraint(equalTo: centerXAnchor),
-            suggestionStack.widthAnchor.constraint(equalTo: widthAnchor, multiplier: 0.72),
-            suggestionStack.heightAnchor.constraint(equalToConstant: 34)
+            suggestionStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 4),
+            suggestionStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4),
+            candidateHeightConstraint
         ])
         rebuildRows()
     }
@@ -69,6 +75,7 @@ final class QwertyKeyboardView: UIView {
         stopDeleteRepeat()
         swipeGesture?.cancel()
         homeRowGesture?.cancel()
+        keyPopupPresenter.hide()
     }
 
     func update(state: KeyboardState, theme: KeyboardTheme, size: CGSize, returnKeyTitle: String) {
@@ -78,6 +85,7 @@ final class QwertyKeyboardView: UIView {
         self.state = state
         self.theme = theme
         self.returnKeyTitle = returnKeyTitle
+        lastLayoutSize = size
         let nextMetrics = KeyboardMetrics.resolve(
             for: size,
             idiom: traitCollection.userInterfaceIdiom,
@@ -85,6 +93,11 @@ final class QwertyKeyboardView: UIView {
         )
 
         if modeChanged {
+            candidateHeightConstraint.constant = state.mode == .letters ? 34 : 0
+            suggestionStack.isHidden = state.mode != .letters
+            if state.mode != .letters {
+                candidateBarContent = .hidden
+            }
             rebuildRows()
         } else if shiftChanged {
             updateLetterCase()
@@ -96,6 +109,9 @@ final class QwertyKeyboardView: UIView {
             leadingConstraint.constant = nextMetrics.horizontalPadding
             trailingConstraint.constant = -nextMetrics.horizontalPadding
             bottomConstraint.constant = -nextMetrics.verticalPadding
+            updateRowHeights(for: size, metrics: nextMetrics)
+        } else if lastLayoutSize != size {
+            updateRowHeights(for: size, metrics: nextMetrics)
         }
         updateKeyAppearance()
     }
@@ -111,6 +127,8 @@ final class QwertyKeyboardView: UIView {
         homeRowGesture = nil
         homeRowView = nil
         keyControls.removeAll(keepingCapacity: true)
+        NSLayoutConstraint.deactivate(rowHeightConstraints)
+        rowHeightConstraints.removeAll(keepingCapacity: true)
         rowsStack.arrangedSubviews.forEach {
             rowsStack.removeArrangedSubview($0)
             $0.removeFromSuperview()
@@ -138,6 +156,7 @@ final class QwertyKeyboardView: UIView {
             for descriptor in row.keys {
                 let key = KeyboardKeyControl(descriptor: descriptor)
                 configureInteraction(for: key)
+                configurePopup(for: key)
                 rowView.addArrangedSubview(key)
                 keyControls.append(key)
 
@@ -150,6 +169,12 @@ final class QwertyKeyboardView: UIView {
                 previousKey = key
             }
             rowsStack.addArrangedSubview(rowView)
+            let rowHeight = rowView.heightAnchor.constraint(equalToConstant: CGFloat(theme.keyHeight))
+            rowHeight.isActive = true
+            rowHeightConstraints.append(rowHeight)
+        }
+        if let metrics {
+            updateRowHeights(for: lastLayoutSize, metrics: metrics)
         }
         configureSwipeGestureIfNeeded()
         updateKeyAppearance()
@@ -157,7 +182,25 @@ final class QwertyKeyboardView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        if let metrics, bounds.size != lastLayoutSize {
+            lastLayoutSize = bounds.size
+            updateRowHeights(for: bounds.size, metrics: metrics)
+        }
         updateSwipeKeyGeometries()
+    }
+
+    private func updateRowHeights(for size: CGSize, metrics: KeyboardMetrics) {
+        guard !rowHeightConstraints.isEmpty, size.height > 0 else { return }
+        let rowCount = CGFloat(rowHeightConstraints.count)
+        let candidateHeight = state.mode == .letters ? candidateHeightConstraint.constant + 6 : 0
+        let spacingHeight = metrics.rowSpacing * max(0, rowCount - 1)
+        let availableHeight = max(
+            0,
+            size.height - candidateHeight - metrics.verticalPadding * 2 - spacingHeight
+        )
+        let maximumRowHeight = availableHeight / rowCount
+        let effectiveHeight = max(28, min(CGFloat(theme.keyHeight), maximumRowHeight))
+        rowHeightConstraints.forEach { $0.constant = effectiveHeight }
     }
 
     private func configureSwipeGestureIfNeeded() {
@@ -205,6 +248,22 @@ final class QwertyKeyboardView: UIView {
         }
     }
 
+    private func configurePopup(for key: KeyboardKeyControl) {
+        guard key.popupText != nil else { return }
+        key.onTouchDown = { [weak self] key in
+            guard let self, let text = key.popupText else { return }
+            self.keyPopupPresenter.show(text: text, above: key, theme: self.theme)
+        }
+        key.onTouchEnded = { [weak self] in
+            self?.keyPopupPresenter.hide()
+        }
+    }
+
+    func updateKeyPopup(enabled: Bool) {
+        keyPopupPresenter.isEnabled = enabled
+        if !enabled { keyPopupPresenter.hide() }
+    }
+
     private func configureInteraction(for key: KeyboardKeyControl) {
         switch key.action {
         case .backspace:
@@ -236,7 +295,15 @@ final class QwertyKeyboardView: UIView {
         }
     }
 
-    func showSwipeCandidates(_ candidates: [String]) {
+    func showCandidates(_ content: CandidateBarContent) {
+        candidateBarContent = content
+        let candidates: [String]
+        switch content {
+        case .hidden:
+            candidates = []
+        case .predictions(let values), .swipeAlternatives(let values):
+            candidates = values
+        }
         suggestionStack.arrangedSubviews.forEach {
             suggestionStack.removeArrangedSubview($0)
             $0.removeFromSuperview()
@@ -250,15 +317,22 @@ final class QwertyKeyboardView: UIView {
                 weight: .medium
             )
             button.backgroundColor = theme.suggestionBarColor.uiColor
-            button.addTarget(self, action: #selector(swipeCandidateTapped(_:)), for: .touchUpInside)
+            button.addTarget(self, action: #selector(candidateTapped(_:)), for: .touchUpInside)
             suggestionStack.addArrangedSubview(button)
         }
         suggestionStack.isHidden = candidates.isEmpty
     }
 
-    @objc private func swipeCandidateTapped(_ sender: UIButton) {
+    @objc private func candidateTapped(_ sender: UIButton) {
         guard let candidate = sender.title(for: .normal) else { return }
-        delegate?.qwertyKeyboardView(self, didTrigger: .swipeAlternative(candidate))
+        switch candidateBarContent {
+        case .predictions:
+            delegate?.qwertyKeyboardView(self, didTrigger: .predictionSelected(candidate))
+        case .swipeAlternatives:
+            delegate?.qwertyKeyboardView(self, didTrigger: .swipeAlternative(candidate))
+        case .hidden:
+            break
+        }
     }
 
     func updateDeletionFeedbackAnimation(enabled: Bool) {
@@ -266,6 +340,7 @@ final class QwertyKeyboardView: UIView {
     }
 
     @objc private func homeRowGestureChanged(_ recognizer: HorizontalDeletionGestureRecognizer) {
+        if recognizer.state == .began { keyPopupPresenter.hide() }
         guard recognizer.state == .ended, let level = recognizer.deletionLevel else { return }
         animateDeletionFeedbackIfNeeded()
         delegate?.qwertyKeyboardView(self, didTrigger: .gestureDelete(level))
@@ -289,6 +364,7 @@ final class QwertyKeyboardView: UIView {
     }
 
     @objc private func swipeGestureChanged(_ recognizer: SwipeTypingGestureRecognizer) {
+        if recognizer.state == .began { keyPopupPresenter.hide() }
         guard recognizer.state == .ended, let result = recognizer.result else { return }
         if case .typing(let path) = result {
             delegate?.qwertyKeyboardView(self, didTrigger: .swipePath(path))

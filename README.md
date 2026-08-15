@@ -9,6 +9,9 @@ A native, offline custom iOS keyboard with a lightweight QWERTY layout and emoji
 - Optional home-row deletion feedback animation, disabled by default and controlled in the app
 - Basic swipe typing with local English dictionary matching and confidence ranking
 - Swipe candidate overlay for correcting the most recent gesture word
+- Three local word-prediction candidates using the current word and previous-word context
+- Safe partial-word replacement when a prediction is selected
+- Optional key popups and system keystroke sound controls
 - Theme settings with Automatic, Light, Dark, and Custom modes
 - Custom key, keyboard, function-key, accent-key, text, and suggestion-bar colors
 - Configurable corner radius, bounded key height, and font size
@@ -61,6 +64,10 @@ Theme and interaction settings are available from the host app under **Themes** 
 - `EmojiKeyboardExtension/SwipeTypingGestureRecognizer.swift`: tap, deletion, and swipe intent arbitration
 - `EmojiKeyboardExtension/SwipeTypingEngine.swift`: candidate generation, geometry scoring, and ranking
 - `EmojiKeyboardExtension/SwipeDictionary.swift`: indexed local dictionary provider
+- `EmojiKeyboardExtension/WordPredictionModels.swift`: Unicode-aware context parsing and prediction contracts
+- `EmojiKeyboardExtension/WordPredictionEngine.swift`: independent prefix and previous-word prediction engine
+- `EmojiKeyboardExtension/KeyPopupPresenter.swift`: reusable key popup presentation
+- `EmojiKeyboardExtension/KeyboardFeedbackManager.swift`: centralized keystroke sound policy
 - `EmojiKeyboardExtension/EmojiKeyboardView.swift`: existing emoji grid view
 - `EmojiKeyboardExtension/EmojiCatalog.swift`: categorized emoji data
 - `EmojiKeyboardExtension/EmojiCell.swift`: reusable emoji grid cell

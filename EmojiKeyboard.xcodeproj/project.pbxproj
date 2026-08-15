@@ -29,6 +29,12 @@
 		100000000000000000000014 /* SwipeTypingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001D /* SwipeTypingEngine.swift */; };
 		100000000000000000000015 /* SwipeTypingGestureRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001E /* SwipeTypingGestureRecognizer.swift */; };
 		100000000000000000000016 /* english_swipe_words.txt in Resources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001F /* english_swipe_words.txt */; };
+		100000000000000000000017 /* KeyboardInteractionSettings.swift in App Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000020 /* KeyboardInteractionSettings.swift */; };
+		100000000000000000000018 /* KeyboardInteractionSettings.swift in Extension Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000020 /* KeyboardInteractionSettings.swift */; };
+		100000000000000000000019 /* WordPredictionModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000021 /* WordPredictionModels.swift */; };
+		10000000000000000000001A /* WordPredictionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000022 /* WordPredictionEngine.swift */; };
+		10000000000000000000001B /* KeyPopupPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000023 /* KeyPopupPresenter.swift */; };
+		10000000000000000000001C /* KeyboardFeedbackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000024 /* KeyboardFeedbackManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -81,6 +87,11 @@
 		20000000000000000000001D /* SwipeTypingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeTypingEngine.swift; sourceTree = "<group>"; };
 		20000000000000000000001E /* SwipeTypingGestureRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeTypingGestureRecognizer.swift; sourceTree = "<group>"; };
 		20000000000000000000001F /* english_swipe_words.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Resources/english_swipe_words.txt; sourceTree = "<group>"; };
+		200000000000000000000020 /* KeyboardInteractionSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardInteractionSettings.swift; sourceTree = "<group>"; };
+		200000000000000000000021 /* WordPredictionModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordPredictionModels.swift; sourceTree = "<group>"; };
+		200000000000000000000022 /* WordPredictionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordPredictionEngine.swift; sourceTree = "<group>"; };
+		200000000000000000000023 /* KeyPopupPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyPopupPresenter.swift; sourceTree = "<group>"; };
+		200000000000000000000024 /* KeyboardFeedbackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardFeedbackManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,6 +146,7 @@
 				200000000000000000000015 /* GestureDeletion.swift */,
 				200000000000000000000019 /* ThemeManager.swift */,
 				600000000000000000000006 /* SwipeTyping */,
+				600000000000000000000007 /* PredictionAndFeedback */,
 				200000000000000000000004 /* EmojiCatalog.swift */,
 				200000000000000000000005 /* EmojiCell.swift */,
 				200000000000000000000006 /* Info.plist */,
@@ -155,10 +167,22 @@
 			name = SwipeTyping;
 			sourceTree = "<group>";
 		};
+		600000000000000000000007 /* PredictionAndFeedback */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000021 /* WordPredictionModels.swift */,
+				200000000000000000000022 /* WordPredictionEngine.swift */,
+				200000000000000000000023 /* KeyPopupPresenter.swift */,
+				200000000000000000000024 /* KeyboardFeedbackManager.swift */,
+			);
+			name = PredictionAndFeedback;
+			sourceTree = "<group>";
+		};
 		600000000000000000000005 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
 				200000000000000000000016 /* KeyboardTheme.swift */,
+				200000000000000000000020 /* KeyboardInteractionSettings.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -276,6 +300,7 @@
 				100000000000000000000002 /* ContentView.swift in Sources */,
 				10000000000000000000000E /* KeyboardTheme.swift in App Sources */,
 				100000000000000000000011 /* ThemeSettingsView.swift in Sources */,
+				100000000000000000000017 /* KeyboardInteractionSettings.swift in App Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -296,6 +321,11 @@
 				100000000000000000000013 /* SwipeDictionary.swift in Sources */,
 				100000000000000000000014 /* SwipeTypingEngine.swift in Sources */,
 				100000000000000000000015 /* SwipeTypingGestureRecognizer.swift in Sources */,
+				100000000000000000000018 /* KeyboardInteractionSettings.swift in Extension Sources */,
+				100000000000000000000019 /* WordPredictionModels.swift in Sources */,
+				10000000000000000000001A /* WordPredictionEngine.swift in Sources */,
+				10000000000000000000001B /* KeyPopupPresenter.swift in Sources */,
+				10000000000000000000001C /* KeyboardFeedbackManager.swift in Sources */,
 				100000000000000000000004 /* EmojiCatalog.swift in Sources */,
 				100000000000000000000005 /* EmojiCell.swift in Sources */,
 			);
@@ -399,7 +429,7 @@
 				CODE_SIGN_ENTITLEMENTS = EmojiKeyboard/EmojiKeyboard.entitlements;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = AH34H7VVG5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = KnKeys;
@@ -423,7 +453,7 @@
 				CODE_SIGN_ENTITLEMENTS = EmojiKeyboard/EmojiKeyboard.entitlements;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = AH34H7VVG5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = KnKeys;
@@ -446,7 +476,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = EmojiKeyboardExtension/EmojiKeyboardExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = AH34H7VVG5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EmojiKeyboardExtension/Info.plist;
@@ -467,7 +497,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = EmojiKeyboardExtension/EmojiKeyboardExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = AH34H7VVG5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EmojiKeyboardExtension/Info.plist;

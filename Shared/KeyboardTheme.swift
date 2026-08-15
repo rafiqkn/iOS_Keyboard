@@ -131,6 +131,7 @@ enum ThemeStoreKeys {
     static let customTheme = "theme.custom"
     static let revision = "theme.revision"
     static let deletionFeedbackAnimation = "interaction.deletionFeedbackAnimation"
+    static let interactionSettings = "interaction.settings"
 }
 
 final class ThemeStore {
@@ -156,6 +157,16 @@ final class ThemeStore {
         defaults.bool(forKey: ThemeStoreKeys.deletionFeedbackAnimation)
     }
 
+    func loadInteractionSettings() -> KeyboardInteractionSettings {
+        guard let data = defaults.data(forKey: ThemeStoreKeys.interactionSettings),
+              let settings = try? decoder.decode(KeyboardInteractionSettings.self, from: data) else {
+            var settings = KeyboardInteractionSettings.defaults
+            settings.deletionFeedbackAnimation = loadDeletionFeedbackAnimation()
+            return settings
+        }
+        return settings
+    }
+
     func loadCustomTheme() -> KeyboardTheme {
         guard let data = defaults.data(forKey: ThemeStoreKeys.customTheme),
               let theme = try? decoder.decode(KeyboardTheme.self, from: data) else {
@@ -167,10 +178,20 @@ final class ThemeStore {
     func save(
         selection: ThemeSelection,
         customTheme: KeyboardTheme,
-        deletionFeedbackAnimation: Bool
+        deletionFeedbackAnimation: Bool,
+        keyPopupEnabled: Bool,
+        keystrokeSoundMode: KeystrokeSoundMode
     ) {
+        let interactionSettings = KeyboardInteractionSettings(
+            deletionFeedbackAnimation: deletionFeedbackAnimation,
+            keyPopupEnabled: keyPopupEnabled,
+            keystrokeSoundMode: keystrokeSoundMode
+        )
         defaults.set(selection.rawValue, forKey: ThemeStoreKeys.selection)
         defaults.set(deletionFeedbackAnimation, forKey: ThemeStoreKeys.deletionFeedbackAnimation)
+        if let data = try? encoder.encode(interactionSettings) {
+            defaults.set(data, forKey: ThemeStoreKeys.interactionSettings)
+        }
         if let data = try? encoder.encode(KeyboardThemeValidator.validated(customTheme)) {
             defaults.set(data, forKey: ThemeStoreKeys.customTheme)
         }

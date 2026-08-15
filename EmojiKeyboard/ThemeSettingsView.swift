@@ -6,6 +6,8 @@ final class ThemeEditorModel: ObservableObject {
     @Published var selection: ThemeSelection
     @Published var theme: KeyboardTheme
     @Published var deletionFeedbackAnimation: Bool
+    @Published var keyPopupEnabled: Bool
+    @Published var keystrokeSoundMode: KeystrokeSoundMode
     @Published var didSave = false
 
     private let store: ThemeStore
@@ -14,7 +16,10 @@ final class ThemeEditorModel: ObservableObject {
         self.store = store
         selection = store.loadSelection()
         theme = store.loadCustomTheme()
-        deletionFeedbackAnimation = store.loadDeletionFeedbackAnimation()
+        let interactionSettings = store.loadInteractionSettings()
+        deletionFeedbackAnimation = interactionSettings.deletionFeedbackAnimation
+        keyPopupEnabled = interactionSettings.keyPopupEnabled
+        keystrokeSoundMode = interactionSettings.keystrokeSoundMode
     }
 
     func save() {
@@ -22,7 +27,9 @@ final class ThemeEditorModel: ObservableObject {
         store.save(
             selection: selection,
             customTheme: theme,
-            deletionFeedbackAnimation: deletionFeedbackAnimation
+            deletionFeedbackAnimation: deletionFeedbackAnimation,
+            keyPopupEnabled: keyPopupEnabled,
+            keystrokeSoundMode: keystrokeSoundMode
         )
         didSave = true
     }
@@ -72,7 +79,7 @@ struct ThemeSettingsView: View {
             }
             .disabled(model.selection != .custom)
 
-            Section("Key Shape") {
+            Section {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Text("Corner radius")
@@ -83,12 +90,37 @@ struct ThemeSettingsView: View {
                     Slider(value: $model.theme.keyCornerRadius, in: 0...12, step: 1)
                 }
 
-                Picker("Key height", selection: $model.theme.keyHeight) {
-                    Text("Compact").tag(38.0)
-                    Text("Standard").tag(44.0)
-                    Text("Large").tag(50.0)
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Key height")
+                        Text("\(Int(model.theme.keyHeight)) pt")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+
+                    Spacer()
+
+                    Button {
+                        adjustKeyHeight(by: -2)
+                    } label: {
+                        Image(systemName: "minus")
+                            .frame(width: 36, height: 36)
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(model.theme.keyHeight <= 34)
+                    .accessibilityLabel("Decrease key height")
+
+                    Button {
+                        adjustKeyHeight(by: 2)
+                    } label: {
+                        Image(systemName: "plus")
+                            .frame(width: 36, height: 36)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(model.theme.keyHeight >= 56)
+                    .accessibilityLabel("Increase key height")
                 }
-                .pickerStyle(.segmented)
 
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
@@ -99,15 +131,27 @@ struct ThemeSettingsView: View {
                     }
                     Slider(value: $model.theme.fontSize, in: 16...28, step: 1)
                 }
+            } header: {
+                Text("Key Shape")
+            } footer: {
+                Text("Key height is bounded automatically in landscape and on smaller screens to keep the keyboard usable.")
             }
             .disabled(model.selection != .custom)
 
             Section {
                 Toggle("Row deletion animation", isOn: $model.deletionFeedbackAnimation)
+                Toggle("Key popups", isOn: $model.keyPopupEnabled)
+
+                Picker("Keystroke sound", selection: $model.keystrokeSoundMode) {
+                    ForEach(KeystrokeSoundMode.allCases) { mode in
+                        Text(mode.title).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
             } header: {
                 Text("Interaction")
             } footer: {
-                Text("Adds brief visual feedback after a home-row deletion. Typing and deletion speed are unchanged.")
+                Text("Visual feedback and the system keyboard click can be changed without affecting typing speed.")
             }
 
             Section {
@@ -130,6 +174,12 @@ struct ThemeSettingsView: View {
         .onChange(of: model.selection) { _ in model.didSave = false }
         .onChange(of: model.theme) { _ in model.didSave = false }
         .onChange(of: model.deletionFeedbackAnimation) { _ in model.didSave = false }
+        .onChange(of: model.keyPopupEnabled) { _ in model.didSave = false }
+        .onChange(of: model.keystrokeSoundMode) { _ in model.didSave = false }
+    }
+
+    private func adjustKeyHeight(by amount: Double) {
+        model.theme.keyHeight = min(max(model.theme.keyHeight + amount, 34), 56)
     }
 
     private func binding(_ keyPath: WritableKeyPath<KeyboardTheme, ThemeColor>) -> Binding<Color> {
@@ -195,7 +245,7 @@ private struct KeyboardThemePreview: View {
             .lineLimit(1)
             .minimumScaleFactor(0.6)
             .frame(maxWidth: .infinity)
-            .frame(height: min(theme.keyHeight, 34))
+            .frame(height: min(theme.keyHeight * 0.72, 40))
             .background(
                 accent ? theme.accentKeyBackground.color :
                     (function ? theme.functionKeyBackground.color : theme.keyBackground.color)
