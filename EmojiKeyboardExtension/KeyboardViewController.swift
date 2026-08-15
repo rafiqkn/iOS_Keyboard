@@ -105,6 +105,7 @@ final class KeyboardViewController: UIInputViewController {
             state.previousTextMode = state.mode
         }
         state.mode = mode
+        updateHeight(for: view.bounds.size)
         if mode == .emoji {
             installKeyboardView(emojiView)
         } else {
@@ -121,7 +122,7 @@ final class KeyboardViewController: UIInputViewController {
         let themeKeyHeight = CGFloat(themeManager.currentTheme.keyHeight)
         let rowSpacing: CGFloat = traitCollection.userInterfaceIdiom == .pad ? 7 : (landscape ? 3 : 6)
         let verticalPadding: CGFloat = traitCollection.userInterfaceIdiom == .pad ? 8 : (landscape ? 4 : 7)
-        let candidateBarHeight: CGFloat = state.mode == .letters ? 36 : 0
+        let candidateBarHeight: CGFloat = 36
         let themedHeight = themeKeyHeight * 5 + rowSpacing * 4 + verticalPadding * 2 + candidateBarHeight
         let allowedRange: ClosedRange<CGFloat>
         if traitCollection.userInterfaceIdiom == .pad {

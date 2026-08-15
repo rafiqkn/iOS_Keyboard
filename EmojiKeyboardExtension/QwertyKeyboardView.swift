@@ -82,6 +82,7 @@ final class QwertyKeyboardView: UIView {
         let modeChanged = self.state.mode != state.mode
         let shiftChanged = self.state.shift != state.shift
         let themeChanged = self.theme != theme
+        let sizeChanged = lastLayoutSize != size
         self.state = state
         self.theme = theme
         self.returnKeyTitle = returnKeyTitle
@@ -93,7 +94,7 @@ final class QwertyKeyboardView: UIView {
         )
 
         if modeChanged {
-            candidateHeightConstraint.constant = state.mode == .letters ? 34 : 0
+            candidateHeightConstraint.constant = 34
             suggestionStack.isHidden = state.mode != .letters
             if state.mode != .letters {
                 candidateBarContent = .hidden
@@ -110,7 +111,7 @@ final class QwertyKeyboardView: UIView {
             trailingConstraint.constant = -nextMetrics.horizontalPadding
             bottomConstraint.constant = -nextMetrics.verticalPadding
             updateRowHeights(for: size, metrics: nextMetrics)
-        } else if lastLayoutSize != size {
+        } else if sizeChanged {
             updateRowHeights(for: size, metrics: nextMetrics)
         }
         updateKeyAppearance()
@@ -192,7 +193,7 @@ final class QwertyKeyboardView: UIView {
     private func updateRowHeights(for size: CGSize, metrics: KeyboardMetrics) {
         guard !rowHeightConstraints.isEmpty, size.height > 0 else { return }
         let rowCount = CGFloat(rowHeightConstraints.count)
-        let candidateHeight = state.mode == .letters ? candidateHeightConstraint.constant + 6 : 0
+        let candidateHeight = candidateHeightConstraint.constant + 6
         let spacingHeight = metrics.rowSpacing * max(0, rowCount - 1)
         let availableHeight = max(
             0,
