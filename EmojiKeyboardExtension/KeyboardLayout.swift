@@ -33,7 +33,7 @@ enum KeyboardLayout {
                 KeyboardKeyDescriptor(.spacer, width: 0.35, style: .spacer)
             ] + characterRow(letters("asdfghjkl")).keys + [
                 KeyboardKeyDescriptor(.spacer, width: 0.35, style: .spacer)
-            ]),
+            ], role: .homeLetters),
             KeyboardRowDescriptor(keys: [
                 KeyboardKeyDescriptor(.shift, symbolName: shiftSymbol, width: 1.35, style: .function)
             ] + characterRow(letters("zxcvbnm")).keys + [

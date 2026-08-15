@@ -22,6 +22,7 @@ enum KeyboardKeyAction: Equatable {
     case nextKeyboard
     case emoji
     case mode(KeyboardMode)
+    case gestureDelete(GestureDeletionLevel)
     case spacer
 }
 
@@ -55,8 +56,19 @@ struct KeyboardKeyDescriptor {
     }
 }
 
+enum KeyboardRowRole {
+    case standard
+    case homeLetters
+}
+
 struct KeyboardRowDescriptor {
     let keys: [KeyboardKeyDescriptor]
+    let role: KeyboardRowRole
+
+    init(keys: [KeyboardKeyDescriptor], role: KeyboardRowRole = .standard) {
+        self.keys = keys
+        self.role = role
+    }
 }
 
 struct KeyboardState {

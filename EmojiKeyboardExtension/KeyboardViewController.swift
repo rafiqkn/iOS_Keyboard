@@ -31,6 +31,7 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
+        qwertyView.cancelActiveInteractions()
         coordinator.animate(alongsideTransition: nil) { [weak self] _ in
             guard let self else { return }
             self.updateHeight(for: size)
@@ -60,6 +61,7 @@ final class KeyboardViewController: UIInputViewController {
 
     private func setMode(_ mode: KeyboardMode) {
         guard state.mode != mode else { return }
+        qwertyView.cancelActiveInteractions()
         if state.mode != .emoji {
             state.previousTextMode = state.mode
         }
@@ -135,8 +137,25 @@ final class KeyboardViewController: UIInputViewController {
             setMode(.emoji)
         case .mode(let mode):
             setMode(mode)
+        case .gestureDelete(let level):
+            delete(using: level)
         case .nextKeyboard, .spacer:
             break
+        }
+    }
+
+    private func delete(using level: GestureDeletionLevel) {
+        let count = TextDeletionPlanner.deletionCount(
+            for: level,
+            context: textDocumentProxy.documentContextBeforeInput,
+            configuration: GestureDeletionConfiguration.standard
+        )
+        for _ in 0..<count {
+            textDocumentProxy.deleteBackward()
+        }
+        if count > 0 {
+            playInputClick()
+            updateAutomaticShiftIfNeeded()
         }
     }
 

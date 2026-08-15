@@ -5,6 +5,7 @@ A native, offline custom iOS keyboard with a lightweight QWERTY layout and emoji
 ## Features
 
 - Standard QWERTY layout with a permanent number row
+- Home-row left-swipe deletion with configurable character and word thresholds
 - Shift, Caps Lock, delete repeat, adaptive return, and double-space period
 - Emoji mode with nine categories and a scrollable grid
 - Emoji insertion through `textDocumentProxy`
@@ -42,6 +43,7 @@ Full Access is not required. The extension inserts local Unicode text and does n
 - `EmojiKeyboardExtension/KeyboardModels.swift`: keyboard state and actions
 - `EmojiKeyboardExtension/KeyboardLayout.swift`: data-driven QWERTY, number, and symbol rows
 - `EmojiKeyboardExtension/QwertyKeyboardView.swift`: responsive QWERTY view
+- `EmojiKeyboardExtension/GestureDeletion.swift`: home-row gesture recognition and Unicode-aware deletion planning
 - `EmojiKeyboardExtension/EmojiKeyboardView.swift`: existing emoji grid view
 - `EmojiKeyboardExtension/EmojiCatalog.swift`: categorized emoji data
 - `EmojiKeyboardExtension/EmojiCell.swift`: reusable emoji grid cell

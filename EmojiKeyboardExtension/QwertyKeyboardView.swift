@@ -14,6 +14,8 @@ final class QwertyKeyboardView: UIView {
     private var metrics: KeyboardMetrics?
     private var darkMode = false
     private var returnKeyTitle = "return"
+    private let gestureConfiguration = GestureDeletionConfiguration.standard
+    private var homeRowGesture: HorizontalDeletionGestureRecognizer?
     private var deleteDelayWorkItem: DispatchWorkItem?
     private var deleteRepeatTimer: Timer?
     private var topConstraint: NSLayoutConstraint!
@@ -46,7 +48,12 @@ final class QwertyKeyboardView: UIView {
     }
 
     deinit {
+        cancelActiveInteractions()
+    }
+
+    func cancelActiveInteractions() {
         stopDeleteRepeat()
+        homeRowGesture?.cancel()
     }
 
     func update(state: KeyboardState, darkMode: Bool, size: CGSize, returnKeyTitle: String) {
@@ -58,6 +65,7 @@ final class QwertyKeyboardView: UIView {
         let nextMetrics = KeyboardMetrics.resolve(for: size, idiom: traitCollection.userInterfaceIdiom)
 
         if modeChanged {
+            homeRowGesture = nil
             rebuildRows()
         } else if shiftChanged {
             updateLetterCase()
@@ -75,6 +83,8 @@ final class QwertyKeyboardView: UIView {
 
     private func rebuildRows() {
         stopDeleteRepeat()
+        homeRowGesture?.cancel()
+        homeRowGesture = nil
         keyControls.removeAll(keepingCapacity: true)
         rowsStack.arrangedSubviews.forEach {
             rowsStack.removeArrangedSubview($0)
@@ -88,6 +98,16 @@ final class QwertyKeyboardView: UIView {
             rowView.distribution = .fill
             rowView.alignment = .fill
             rowView.spacing = metrics?.keySpacing ?? 5
+
+            if row.role == .homeLetters {
+                let recognizer = HorizontalDeletionGestureRecognizer(
+                    configuration: gestureConfiguration,
+                    target: self,
+                    action: #selector(homeRowGestureChanged(_:))
+                )
+                rowView.addGestureRecognizer(recognizer)
+                homeRowGesture = recognizer
+            }
 
             var previousKey: KeyboardKeyControl?
             for descriptor in row.keys {
@@ -149,6 +169,16 @@ final class QwertyKeyboardView: UIView {
                 key.setTitle(returnKeyTitle)
             }
             key.update(metrics: metrics, darkMode: darkMode, selected: selected)
+        }
+    }
+
+    @objc private func homeRowGestureChanged(_ recognizer: HorizontalDeletionGestureRecognizer) {
+        switch recognizer.state {
+        case .ended:
+            guard let level = recognizer.deletionLevel else { return }
+            delegate?.qwertyKeyboardView(self, didTrigger: .gestureDelete(level))
+        default:
+            break
         }
     }
 
