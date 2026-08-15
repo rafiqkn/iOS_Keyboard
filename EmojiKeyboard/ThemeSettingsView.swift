@@ -5,6 +5,7 @@ import UIKit
 final class ThemeEditorModel: ObservableObject {
     @Published var selection: ThemeSelection
     @Published var theme: KeyboardTheme
+    @Published var deletionFeedbackAnimation: Bool
     @Published var didSave = false
 
     private let store: ThemeStore
@@ -13,11 +14,16 @@ final class ThemeEditorModel: ObservableObject {
         self.store = store
         selection = store.loadSelection()
         theme = store.loadCustomTheme()
+        deletionFeedbackAnimation = store.loadDeletionFeedbackAnimation()
     }
 
     func save() {
         theme = KeyboardThemeValidator.validated(theme)
-        store.save(selection: selection, customTheme: theme)
+        store.save(
+            selection: selection,
+            customTheme: theme,
+            deletionFeedbackAnimation: deletionFeedbackAnimation
+        )
         didSave = true
     }
 
@@ -97,7 +103,15 @@ struct ThemeSettingsView: View {
             .disabled(model.selection != .custom)
 
             Section {
-                Button("Save Theme") {
+                Toggle("Row deletion animation", isOn: $model.deletionFeedbackAnimation)
+            } header: {
+                Text("Interaction")
+            } footer: {
+                Text("Adds brief visual feedback after a home-row deletion. Typing and deletion speed are unchanged.")
+            }
+
+            Section {
+                Button("Save Settings") {
                     model.save()
                 }
                 .frame(maxWidth: .infinity)
@@ -115,6 +129,7 @@ struct ThemeSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: model.selection) { _ in model.didSave = false }
         .onChange(of: model.theme) { _ in model.didSave = false }
+        .onChange(of: model.deletionFeedbackAnimation) { _ in model.didSave = false }
     }
 
     private func binding(_ keyPath: WritableKeyPath<KeyboardTheme, ThemeColor>) -> Binding<Color> {
@@ -159,7 +174,6 @@ private struct KeyboardThemePreview: View {
             }
 
             HStack(spacing: 4) {
-                previewKey("🌐", function: true)
                 previewKey("123", function: true)
                 previewKey("space", width: 3)
                 previewKey("return", function: true, accent: true, width: 1.5)

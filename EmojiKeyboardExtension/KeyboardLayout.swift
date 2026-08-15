@@ -80,7 +80,6 @@ enum KeyboardLayout {
     private static func bottomRow(leftMode: KeyboardMode) -> KeyboardRowDescriptor {
         let modeTitle = leftMode == .letters ? "ABC" : "123"
         return KeyboardRowDescriptor(keys: [
-            KeyboardKeyDescriptor(.nextKeyboard, symbolName: "globe", width: 1.2, style: .function),
             KeyboardKeyDescriptor(.mode(leftMode), title: modeTitle, width: 1.25, style: .function),
             KeyboardKeyDescriptor(.emoji, symbolName: "face.smiling", width: 1.2, style: .function),
             KeyboardKeyDescriptor(.space, title: "space", width: 4.6, style: .space),

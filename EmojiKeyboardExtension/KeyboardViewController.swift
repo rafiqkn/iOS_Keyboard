@@ -1,8 +1,19 @@
 import UIKit
 
+private struct SwipeInsertionRecord {
+    let insertedCount: Int
+    let leadingSpace: Bool
+    let capitalized: Bool
+}
+
 final class KeyboardViewController: UIInputViewController {
     private let qwertyView = QwertyKeyboardView()
     private let themeManager = ThemeManager()
+    private lazy var swipeTypingEngine = SwipeTypingEngine()
+    private let swipeRecognitionQueue = DispatchQueue(
+        label: "com.rafiqkn.KnKeys.swipe-recognition",
+        qos: .userInitiated
+    )
     private lazy var emojiView: EmojiKeyboardView = {
         let view = EmojiKeyboardView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -15,6 +26,9 @@ final class KeyboardViewController: UIInputViewController {
     private var lastShiftTapTime: TimeInterval = 0
     private var lastSpaceTapTime: TimeInterval = 0
     private var didSetInitialShiftState = false
+    private var swipeGeneration = 0
+    private var swipeInsertedTrailingSpace = false
+    private var lastSwipeInsertion: SwipeInsertionRecord?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -67,6 +81,7 @@ final class KeyboardViewController: UIInputViewController {
 
     private func setMode(_ mode: KeyboardMode) {
         guard state.mode != mode else { return }
+        swipeGeneration += 1
         qwertyView.cancelActiveInteractions()
         if state.mode != .emoji {
             state.previousTextMode = state.mode
@@ -111,6 +126,9 @@ final class KeyboardViewController: UIInputViewController {
     private func updateAppearanceAndLayout(size: CGSize? = nil) {
         let theme = themeManager.currentTheme
         view.backgroundColor = theme.keyboardBackground.uiColor
+        qwertyView.updateDeletionFeedbackAnimation(
+            enabled: themeManager.deletionFeedbackAnimationEnabled
+        )
         qwertyView.update(
             state: state,
             theme: theme,
@@ -124,7 +142,19 @@ final class KeyboardViewController: UIInputViewController {
 
     private func handle(_ action: KeyboardKeyAction) {
         switch action {
+        case .swipePath, .swipeAlternative:
+            break
+        default:
+            swipeGeneration += 1
+            lastSwipeInsertion = nil
+            qwertyView.showSwipeCandidates([])
+        }
+        switch action {
         case .character(let text):
+            if swipeInsertedTrailingSpace, isPunctuation(text) {
+                textDocumentProxy.deleteBackward()
+            }
+            swipeInsertedTrailingSpace = false
             insertText(text)
             if state.mode == .letters && state.shift == .on {
                 state.shift = .off
@@ -133,12 +163,15 @@ final class KeyboardViewController: UIInputViewController {
         case .shift:
             updateShiftState()
         case .backspace:
+            swipeInsertedTrailingSpace = false
             textDocumentProxy.deleteBackward()
             playInputClick()
             updateAutomaticShiftIfNeeded()
         case .space:
+            swipeInsertedTrailingSpace = false
             insertSpace()
         case .returnKey:
+            swipeInsertedTrailingSpace = false
             insertText("\n")
             if state.mode == .letters && state.shift != .capsLock {
                 state.shift = .on
@@ -150,9 +183,80 @@ final class KeyboardViewController: UIInputViewController {
             setMode(mode)
         case .gestureDelete(let level):
             delete(using: level)
-        case .nextKeyboard, .spacer:
+        case .swipePath(let path):
+            recognizeSwipe(path)
+        case .swipeAlternative(let word):
+            replaceLastSwipeWord(with: word)
+        case .spacer:
             break
         }
+    }
+
+    private func recognizeSwipe(_ path: SwipePath) {
+        swipeGeneration += 1
+        let generation = swipeGeneration
+        swipeRecognitionQueue.async { [weak self] in
+            guard let self else { return }
+            let result = self.swipeTypingEngine.recognize(path: path)
+            DispatchQueue.main.async { [weak self] in
+                guard let self,
+                      generation == self.swipeGeneration,
+                      self.state.mode == .letters,
+                      let result else { return }
+                self.insertSwipeWord(result.word)
+                self.qwertyView.showSwipeCandidates(result.alternatives)
+            }
+        }
+    }
+
+    private func insertSwipeWord(_ word: String) {
+        let output: String
+        if state.shift != .off {
+            output = word.prefix(1).uppercased() + word.dropFirst()
+        } else {
+            output = word
+        }
+
+        let context = textDocumentProxy.documentContextBeforeInput ?? ""
+        let needsLeadingSpace = context.last.map { $0.isLetter || $0.isNumber } ?? false
+        let insertedText = (needsLeadingSpace ? " " : "") + output + " "
+        textDocumentProxy.insertText(insertedText)
+        lastSwipeInsertion = SwipeInsertionRecord(
+            insertedCount: insertedText.count,
+            leadingSpace: needsLeadingSpace,
+            capitalized: state.shift != .off
+        )
+        swipeInsertedTrailingSpace = true
+        playInputClick()
+
+        if state.shift == .on {
+            state.shift = .off
+            updateAppearanceAndLayout()
+        }
+    }
+
+    private func replaceLastSwipeWord(with word: String) {
+        guard let record = lastSwipeInsertion else { return }
+        for _ in 0..<record.insertedCount {
+            textDocumentProxy.deleteBackward()
+        }
+        let output = record.capitalized
+            ? word.prefix(1).uppercased() + word.dropFirst()
+            : word
+        let replacement = (record.leadingSpace ? " " : "") + output + " "
+        textDocumentProxy.insertText(replacement)
+        lastSwipeInsertion = SwipeInsertionRecord(
+            insertedCount: replacement.count,
+            leadingSpace: record.leadingSpace,
+            capitalized: record.capitalized
+        )
+        swipeInsertedTrailingSpace = true
+        playInputClick()
+    }
+
+    private func isPunctuation(_ text: String) -> Bool {
+        guard text.count == 1, let scalar = text.unicodeScalars.first else { return false }
+        return CharacterSet.punctuationCharacters.contains(scalar)
     }
 
     private func delete(using level: GestureDeletionLevel) {
@@ -273,9 +377,6 @@ extension KeyboardViewController: QwertyKeyboardViewDelegate {
         handle(action)
     }
 
-    func qwertyKeyboardView(_ view: QwertyKeyboardView, handleInputModeListFrom control: UIControl, event: UIEvent) {
-        handleInputModeList(from: control, with: event)
-    }
 }
 
 extension KeyboardViewController: EmojiKeyboardViewDelegate {
@@ -283,9 +384,6 @@ extension KeyboardViewController: EmojiKeyboardViewDelegate {
         handle(action)
     }
 
-    func emojiKeyboardView(_ view: EmojiKeyboardView, handleInputModeListFrom control: UIControl, event: UIEvent) {
-        handleInputModeList(from: control, with: event)
-    }
 
     func emojiKeyboardViewRequestedTextKeyboard(_ view: EmojiKeyboardView) {
         setMode(state.previousTextMode == .emoji ? .letters : state.previousTextMode)

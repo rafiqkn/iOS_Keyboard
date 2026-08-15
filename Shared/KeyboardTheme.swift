@@ -130,6 +130,7 @@ enum ThemeStoreKeys {
     static let selection = "theme.selection"
     static let customTheme = "theme.custom"
     static let revision = "theme.revision"
+    static let deletionFeedbackAnimation = "interaction.deletionFeedbackAnimation"
 }
 
 final class ThemeStore {
@@ -151,6 +152,10 @@ final class ThemeStore {
         return selection
     }
 
+    func loadDeletionFeedbackAnimation() -> Bool {
+        defaults.bool(forKey: ThemeStoreKeys.deletionFeedbackAnimation)
+    }
+
     func loadCustomTheme() -> KeyboardTheme {
         guard let data = defaults.data(forKey: ThemeStoreKeys.customTheme),
               let theme = try? decoder.decode(KeyboardTheme.self, from: data) else {
@@ -159,8 +164,13 @@ final class ThemeStore {
         return KeyboardThemeValidator.validated(theme)
     }
 
-    func save(selection: ThemeSelection, customTheme: KeyboardTheme) {
+    func save(
+        selection: ThemeSelection,
+        customTheme: KeyboardTheme,
+        deletionFeedbackAnimation: Bool
+    ) {
         defaults.set(selection.rawValue, forKey: ThemeStoreKeys.selection)
+        defaults.set(deletionFeedbackAnimation, forKey: ThemeStoreKeys.deletionFeedbackAnimation)
         if let data = try? encoder.encode(KeyboardThemeValidator.validated(customTheme)) {
             defaults.set(data, forKey: ThemeStoreKeys.customTheme)
         }

@@ -19,10 +19,11 @@ enum KeyboardKeyAction: Equatable {
     case backspace
     case space
     case returnKey
-    case nextKeyboard
     case emoji
     case mode(KeyboardMode)
     case gestureDelete(GestureDeletionLevel)
+    case swipePath(SwipePath)
+    case swipeAlternative(String)
     case spacer
 }
 

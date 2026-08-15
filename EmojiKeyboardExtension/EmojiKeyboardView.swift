@@ -2,7 +2,6 @@ import UIKit
 
 protocol EmojiKeyboardViewDelegate: AnyObject {
     func emojiKeyboardView(_ view: EmojiKeyboardView, didTrigger action: KeyboardKeyAction)
-    func emojiKeyboardView(_ view: EmojiKeyboardView, handleInputModeListFrom control: UIControl, event: UIEvent)
     func emojiKeyboardViewRequestedTextKeyboard(_ view: EmojiKeyboardView)
 }
 
@@ -105,9 +104,6 @@ final class EmojiKeyboardView: UIView {
     }
 
     private func makeControlBar() -> UIView {
-        let globeButton = makeKeyButton(symbol: "globe", accessibilityLabel: "Next keyboard")
-        globeButton.addTarget(self, action: #selector(handleInputModeList(from:with:)), for: .allTouchEvents)
-
         let keyboardButton = makeKeyButton(symbol: "keyboard", accessibilityLabel: "Letters")
         keyboardButton.addTarget(self, action: #selector(emojiButtonTapped), for: .touchUpInside)
         let spaceButton = makeKeyButton(title: "space", accessibilityLabel: "Space")
@@ -117,13 +113,12 @@ final class EmojiKeyboardView: UIView {
         let returnButton = makeKeyButton(symbol: "return", accessibilityLabel: "Return")
         returnButton.addTarget(self, action: #selector(insertReturn), for: .touchUpInside)
 
-        controlButtons = [globeButton, keyboardButton, spaceButton, deleteButton, returnButton]
+        controlButtons = [keyboardButton, spaceButton, deleteButton, returnButton]
         let stack = UIStackView(arrangedSubviews: controlButtons)
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.axis = .horizontal
         stack.spacing = 6
         stack.distribution = .fill
-        globeButton.widthAnchor.constraint(equalToConstant: 46).isActive = true
         keyboardButton.widthAnchor.constraint(equalToConstant: 46).isActive = true
         deleteButton.widthAnchor.constraint(equalToConstant: 54).isActive = true
         returnButton.widthAnchor.constraint(equalToConstant: 54).isActive = true
@@ -155,10 +150,6 @@ final class EmojiKeyboardView: UIView {
         collectionView.setContentOffset(.zero, animated: false)
         updateAppearance(theme: theme)
         UIAccessibility.post(notification: .announcement, argument: categories[index].title)
-    }
-
-    @objc private func handleInputModeList(from sender: UIControl, with event: UIEvent) {
-        delegate?.emojiKeyboardView(self, handleInputModeListFrom: sender, event: event)
     }
 
     @objc private func insertSpace() { delegate?.emojiKeyboardView(self, didTrigger: .space) }

@@ -5,7 +5,10 @@ A native, offline custom iOS keyboard with a lightweight QWERTY layout and emoji
 ## Features
 
 - Standard QWERTY layout with a permanent number row
-- Home-row left-swipe deletion with configurable character and word thresholds
+- Independent home-row left-swipe deletion with configurable character and word thresholds
+- Optional home-row deletion feedback animation, disabled by default and controlled in the app
+- Basic swipe typing with local English dictionary matching and confidence ranking
+- Swipe candidate overlay for correcting the most recent gesture word
 - Theme settings with Automatic, Light, Dark, and Custom modes
 - Custom key, keyboard, function-key, accent-key, text, and suggestion-bar colors
 - Configurable corner radius, bounded key height, and font size
@@ -13,7 +16,7 @@ A native, offline custom iOS keyboard with a lightweight QWERTY layout and emoji
 - Shift, Caps Lock, delete repeat, adaptive return, and double-space period
 - Emoji mode with nine categories and a scrollable grid
 - Emoji insertion through `textDocumentProxy`
-- Globe, space, delete, and return keys
+- Space, delete, return, and keyboard mode keys
 - Light and dark keyboard appearances
 - Adaptive iPhone and iPad layouts
 - SwiftUI host app with setup instructions and a test field
@@ -38,9 +41,11 @@ A native, offline custom iOS keyboard with a lightweight QWERTY layout and emoji
 7. Open a text field and use the globe key to switch to KnKeys.
 8. Use the face button to open emoji mode and the keyboard button to return to QWERTY.
 
+The keyboard layout does not include an internal globe key. Switch keyboards using the input-mode controls provided by iOS. Swipe typing uses a bundled common-English seed lexicon; its dictionary provider is modular so a larger licensed corpus can replace it without changing gesture or ranking code.
+
 Full Access is not required. The extension inserts local Unicode text and does not use the network or pasteboard.
 
-Theme settings are available from the host app under **Themes** and are shared with the keyboard through the KnKeys App Group. The suggestion-bar color is stored and displayed in the preview; the suggestion bar itself is not enabled yet.
+Theme and interaction settings are available from the host app under **Themes** and are shared with the keyboard through the KnKeys App Group. The suggestion-bar color styles the swipe candidate overlay.
 
 ## Project Structure
 
@@ -52,7 +57,10 @@ Theme settings are available from the host app under **Themes** and are shared w
 - `EmojiKeyboardExtension/KeyboardModels.swift`: keyboard state and actions
 - `EmojiKeyboardExtension/KeyboardLayout.swift`: data-driven QWERTY, number, and symbol rows
 - `EmojiKeyboardExtension/QwertyKeyboardView.swift`: responsive QWERTY view
-- `EmojiKeyboardExtension/GestureDeletion.swift`: home-row gesture recognition and Unicode-aware deletion planning
+- `EmojiKeyboardExtension/GestureDeletion.swift`: Unicode-aware deletion planning and thresholds
+- `EmojiKeyboardExtension/SwipeTypingGestureRecognizer.swift`: tap, deletion, and swipe intent arbitration
+- `EmojiKeyboardExtension/SwipeTypingEngine.swift`: candidate generation, geometry scoring, and ranking
+- `EmojiKeyboardExtension/SwipeDictionary.swift`: indexed local dictionary provider
 - `EmojiKeyboardExtension/EmojiKeyboardView.swift`: existing emoji grid view
 - `EmojiKeyboardExtension/EmojiCatalog.swift`: categorized emoji data
 - `EmojiKeyboardExtension/EmojiCell.swift`: reusable emoji grid cell
