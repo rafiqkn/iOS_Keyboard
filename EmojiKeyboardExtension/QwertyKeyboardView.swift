@@ -90,6 +90,7 @@ final class QwertyKeyboardView: UIView {
         let nextMetrics = KeyboardMetrics.resolve(
             for: size,
             idiom: traitCollection.userInterfaceIdiom,
+            verticalSizeClass: traitCollection.verticalSizeClass,
             theme: theme
         )
 
@@ -192,15 +193,14 @@ final class QwertyKeyboardView: UIView {
 
     private func updateRowHeights(for size: CGSize, metrics: KeyboardMetrics) {
         guard !rowHeightConstraints.isEmpty, size.height > 0 else { return }
-        let rowCount = CGFloat(rowHeightConstraints.count)
-        let candidateHeight = candidateHeightConstraint.constant + 6
-        let spacingHeight = metrics.rowSpacing * max(0, rowCount - 1)
-        let availableHeight = max(
-            0,
-            size.height - candidateHeight - metrics.verticalPadding * 2 - spacingHeight
+        let effectiveHeight = KeyboardRowHeightPolicy.effectiveHeight(
+            preferredHeight: CGFloat(theme.keyHeight),
+            containerHeight: size.height,
+            rowCount: rowHeightConstraints.count,
+            rowSpacing: metrics.rowSpacing,
+            verticalPadding: metrics.verticalPadding,
+            candidateBandHeight: candidateHeightConstraint.constant + 6
         )
-        let maximumRowHeight = availableHeight / rowCount
-        let effectiveHeight = max(28, min(CGFloat(theme.keyHeight), maximumRowHeight))
         rowHeightConstraints.forEach { $0.constant = effectiveHeight }
     }
 

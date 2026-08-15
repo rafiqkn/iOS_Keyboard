@@ -131,22 +131,11 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func updateHeight() {
-        let compactPhoneLandscape = traitCollection.userInterfaceIdiom == .phone &&
-            traitCollection.verticalSizeClass == .compact
-        let themeKeyHeight = CGFloat(themeManager.currentTheme.keyHeight)
-        let rowSpacing: CGFloat = traitCollection.userInterfaceIdiom == .pad ? 7 : (compactPhoneLandscape ? 3 : 6)
-        let verticalPadding: CGFloat = traitCollection.userInterfaceIdiom == .pad ? 8 : (compactPhoneLandscape ? 4 : 7)
-        let candidateBarHeight: CGFloat = 36
-        let themedHeight = themeKeyHeight * 5 + rowSpacing * 4 + verticalPadding * 2 + candidateBarHeight
-        let allowedRange: ClosedRange<CGFloat>
-        if traitCollection.userInterfaceIdiom == .pad {
-            allowedRange = 280...370
-        } else if compactPhoneLandscape {
-            allowedRange = 190...230
-        } else {
-            allowedRange = 250...360
-        }
-        let height = min(max(themedHeight, allowedRange.lowerBound), allowedRange.upperBound)
+        let height = KeyboardHeightPolicy.outerHeight(
+            keyHeight: CGFloat(themeManager.currentTheme.keyHeight),
+            idiom: traitCollection.userInterfaceIdiom,
+            verticalSizeClass: traitCollection.verticalSizeClass
+        )
         guard abs(height - appliedKeyboardHeight) > 0.5 else { return }
         appliedKeyboardHeight = height
         if heightConstraint == nil {

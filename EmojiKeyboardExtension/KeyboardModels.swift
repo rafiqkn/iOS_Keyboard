@@ -85,6 +85,48 @@ struct KeyboardState {
     var shift: ShiftState = .off
 }
 
+struct KeyboardHeightPolicy {
+    static func outerHeight(
+        keyHeight: CGFloat,
+        idiom: UIUserInterfaceIdiom,
+        verticalSizeClass: UIUserInterfaceSizeClass?
+    ) -> CGFloat {
+        let compactPhoneLandscape = idiom == .phone && verticalSizeClass == .compact
+        let rowSpacing: CGFloat = idiom == .pad ? 7 : (compactPhoneLandscape ? 3 : 6)
+        let verticalPadding: CGFloat = idiom == .pad ? 8 : (compactPhoneLandscape ? 4 : 7)
+        let themedHeight = keyHeight * 5 + rowSpacing * 4 + verticalPadding * 2 + 36
+        let allowedRange: ClosedRange<CGFloat>
+        if idiom == .pad {
+            allowedRange = 280...370
+        } else if compactPhoneLandscape {
+            allowedRange = 190...230
+        } else {
+            allowedRange = 250...360
+        }
+        return min(max(themedHeight, allowedRange.lowerBound), allowedRange.upperBound)
+    }
+}
+
+struct KeyboardRowHeightPolicy {
+    static func effectiveHeight(
+        preferredHeight: CGFloat,
+        containerHeight: CGFloat,
+        rowCount: Int,
+        rowSpacing: CGFloat,
+        verticalPadding: CGFloat,
+        candidateBandHeight: CGFloat = 40
+    ) -> CGFloat {
+        guard rowCount > 0, containerHeight > 0 else { return 0 }
+        let spacingHeight = rowSpacing * CGFloat(max(0, rowCount - 1))
+        let availableHeight = max(
+            0,
+            containerHeight - candidateBandHeight - verticalPadding * 2 - spacingHeight
+        )
+        let maximumRowHeight = availableHeight / CGFloat(rowCount)
+        return max(28, min(preferredHeight, maximumRowHeight))
+    }
+}
+
 struct KeyboardMetrics: Equatable {
     let horizontalPadding: CGFloat
     let verticalPadding: CGFloat
@@ -97,9 +139,10 @@ struct KeyboardMetrics: Equatable {
     static func resolve(
         for size: CGSize,
         idiom: UIUserInterfaceIdiom,
+        verticalSizeClass: UIUserInterfaceSizeClass? = nil,
         theme: KeyboardTheme
     ) -> KeyboardMetrics {
-        let landscape = size.width > size.height
+        let landscape = idiom == .phone && verticalSizeClass == .compact
         if idiom == .pad {
             return KeyboardMetrics(
                 horizontalPadding: 10,

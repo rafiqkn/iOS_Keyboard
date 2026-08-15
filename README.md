@@ -73,6 +73,21 @@ Theme and interaction settings are available from the host app under **Themes** 
 - `EmojiKeyboardExtension/EmojiCell.swift`: reusable emoji grid cell
 - `EmojiKeyboardExtension/Info.plist`: keyboard extension configuration
 
+## Tests
+
+Run the full unit and smoke-test suite on an iOS Simulator:
+
+```bash
+DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+  xcodebuild test \
+  -project EmojiKeyboard.xcodeproj \
+  -scheme EmojiKeyboard \
+  -destination 'platform=iOS Simulator,name=iPhone 17' \
+  CODE_SIGNING_ALLOWED=NO
+```
+
+The `KnKeysTests` target covers theme validation and App Group settings migration, keyboard layouts and metrics, emoji catalog integrity, deletion planning, swipe candidate generation and ranking, word prediction context and ranking, dictionary resources, key controls, emoji rendering, popup presentation, and the height policies that prevent portrait/emoji shrinking. XCTest does not replace physical-device checks for UIKit keyboard touch arbitration, `textDocumentProxy`, system keyboard sound behavior, or iOS keyboard registration.
+
 ## Command-Line Build
 
 If `xcode-select` points to Command Line Tools, either select Xcode globally or provide `DEVELOPER_DIR` for one command:

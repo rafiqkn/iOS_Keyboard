@@ -35,6 +35,31 @@
 		10000000000000000000001A /* WordPredictionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000022 /* WordPredictionEngine.swift */; };
 		10000000000000000000001B /* KeyPopupPresenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000023 /* KeyPopupPresenter.swift */; };
 		10000000000000000000001C /* KeyboardFeedbackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000024 /* KeyboardFeedbackManager.swift */; };
+		C10000000000000000000001 /* ThemeAndSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000001 /* ThemeAndSettingsTests.swift */; };
+		C10000000000000000000002 /* LayoutEmojiAndDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000002 /* LayoutEmojiAndDeletionTests.swift */; };
+		C10000000000000000000003 /* PredictionAndSwipeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000003 /* PredictionAndSwipeTests.swift */; };
+		C10000000000000000000004 /* KeyboardHeightPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000004 /* KeyboardHeightPolicyTests.swift */; };
+		C10000000000000000000005 /* KeyboardTheme.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000016 /* KeyboardTheme.swift */; };
+		C10000000000000000000006 /* KeyboardInteractionSettings.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000020 /* KeyboardInteractionSettings.swift */; };
+		C10000000000000000000007 /* ThemeManager.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000019 /* ThemeManager.swift */; };
+		C10000000000000000000008 /* KeyboardModels.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000010 /* KeyboardModels.swift */; };
+		C10000000000000000000009 /* KeyboardLayout.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000011 /* KeyboardLayout.swift */; };
+		C1000000000000000000000A /* EmojiCatalog.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000004 /* EmojiCatalog.swift */; };
+		C1000000000000000000000B /* GestureDeletion.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000015 /* GestureDeletion.swift */; };
+		C1000000000000000000000C /* SwipeTypingModels.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001B /* SwipeTypingModels.swift */; };
+		C1000000000000000000000D /* SwipeTypingEngine.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001D /* SwipeTypingEngine.swift */; };
+		C1000000000000000000000E /* SwipeDictionary.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001C /* SwipeDictionary.swift */; };
+		C1000000000000000000000F /* WordPredictionModels.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000021 /* WordPredictionModels.swift */; };
+		C10000000000000000000010 /* WordPredictionEngine.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000022 /* WordPredictionEngine.swift */; };
+		C10000000000000000000011 /* english_swipe_words.txt in Test Resources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001F /* english_swipe_words.txt */; };
+		C10000000000000000000012 /* ResourceAndUISmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000006 /* ResourceAndUISmokeTests.swift */; };
+		C10000000000000000000013 /* KeyboardKeyControl.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000012 /* KeyboardKeyControl.swift */; };
+		C10000000000000000000014 /* KeyPopupPresenter.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000023 /* KeyPopupPresenter.swift */; };
+		C10000000000000000000015 /* QwertyKeyboardView.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000013 /* QwertyKeyboardView.swift */; };
+		C10000000000000000000016 /* EmojiCell.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000005 /* EmojiCell.swift */; };
+		C10000000000000000000017 /* EmojiKeyboardView.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000014 /* EmojiKeyboardView.swift */; };
+		C10000000000000000000018 /* SwipeTypingGestureRecognizer.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001E /* SwipeTypingGestureRecognizer.swift */; };
+		C10000000000000000000019 /* KeyboardFeedbackManager.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000024 /* KeyboardFeedbackManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -92,6 +117,12 @@
 		200000000000000000000022 /* WordPredictionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordPredictionEngine.swift; sourceTree = "<group>"; };
 		200000000000000000000023 /* KeyPopupPresenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyPopupPresenter.swift; sourceTree = "<group>"; };
 		200000000000000000000024 /* KeyboardFeedbackManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardFeedbackManager.swift; sourceTree = "<group>"; };
+		C20000000000000000000001 /* ThemeAndSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeAndSettingsTests.swift; sourceTree = "<group>"; };
+		C20000000000000000000002 /* LayoutEmojiAndDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutEmojiAndDeletionTests.swift; sourceTree = "<group>"; };
+		C20000000000000000000003 /* PredictionAndSwipeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionAndSwipeTests.swift; sourceTree = "<group>"; };
+		C20000000000000000000004 /* KeyboardHeightPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardHeightPolicyTests.swift; sourceTree = "<group>"; };
+		C20000000000000000000005 /* KnKeysTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KnKeysTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C20000000000000000000006 /* ResourceAndUISmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceAndUISmokeTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,6 +140,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C50000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -118,6 +156,7 @@
 				600000000000000000000002 /* EmojiKeyboard */,
 				600000000000000000000003 /* EmojiKeyboardExtension */,
 				600000000000000000000005 /* Shared */,
+				C60000000000000000000001 /* KnKeysTests */,
 				600000000000000000000004 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -187,11 +226,24 @@
 			path = Shared;
 			sourceTree = "<group>";
 		};
+		C60000000000000000000001 /* KnKeysTests */ = {
+			isa = PBXGroup;
+			children = (
+				C20000000000000000000001 /* ThemeAndSettingsTests.swift */,
+				C20000000000000000000002 /* LayoutEmojiAndDeletionTests.swift */,
+				C20000000000000000000003 /* PredictionAndSwipeTests.swift */,
+				C20000000000000000000004 /* KeyboardHeightPolicyTests.swift */,
+				C20000000000000000000006 /* ResourceAndUISmokeTests.swift */,
+			);
+			path = KnKeysTests;
+			sourceTree = "<group>";
+		};
 		600000000000000000000004 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				200000000000000000000008 /* KnKeys.app */,
 				200000000000000000000007 /* KnKeysKeyboard.appex */,
+				C20000000000000000000005 /* KnKeysTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -235,6 +287,23 @@
 			productReference = 200000000000000000000007 /* KnKeysKeyboard.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		C70000000000000000000001 /* KnKeysTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CA00000000000000000000001 /* Build configuration list for PBXNativeTarget "KnKeysTests" */;
+			buildPhases = (
+				C80000000000000000000001 /* Sources */,
+				C50000000000000000000001 /* Frameworks */,
+				C80000000000000000000002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = KnKeysTests;
+			productName = KnKeysTests;
+			productReference = C20000000000000000000005 /* KnKeysTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -268,6 +337,7 @@
 			targets = (
 				700000000000000000000001 /* EmojiKeyboard */,
 				700000000000000000000002 /* EmojiKeyboardExtension */,
+				C70000000000000000000001 /* KnKeysTests */,
 			);
 		};
 /* End PBXProject section */
@@ -286,6 +356,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				100000000000000000000016 /* english_swipe_words.txt in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C80000000000000000000002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C10000000000000000000011 /* english_swipe_words.txt in Test Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -328,6 +406,34 @@
 				10000000000000000000001C /* KeyboardFeedbackManager.swift in Sources */,
 				100000000000000000000004 /* EmojiCatalog.swift in Sources */,
 				100000000000000000000005 /* EmojiCell.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C80000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C10000000000000000000001 /* ThemeAndSettingsTests.swift in Sources */,
+				C10000000000000000000002 /* LayoutEmojiAndDeletionTests.swift in Sources */,
+				C10000000000000000000003 /* PredictionAndSwipeTests.swift in Sources */,
+				C10000000000000000000004 /* KeyboardHeightPolicyTests.swift in Sources */,
+				C10000000000000000000005 /* KeyboardTheme.swift in Test Sources */,
+				C10000000000000000000006 /* KeyboardInteractionSettings.swift in Test Sources */,
+				C10000000000000000000007 /* ThemeManager.swift in Test Sources */,
+				C10000000000000000000008 /* KeyboardModels.swift in Test Sources */,
+				C10000000000000000000009 /* KeyboardLayout.swift in Test Sources */,
+				C1000000000000000000000A /* EmojiCatalog.swift in Test Sources */,
+				C1000000000000000000000B /* GestureDeletion.swift in Test Sources */,
+				C1000000000000000000000C /* SwipeTypingModels.swift in Test Sources */,
+				C1000000000000000000000D /* SwipeTypingEngine.swift in Test Sources */,
+				C1000000000000000000000E /* SwipeDictionary.swift in Test Sources */,
+				C1000000000000000000000F /* WordPredictionModels.swift in Test Sources */,
+				C10000000000000000000010 /* WordPredictionEngine.swift in Test Sources */,
+				C10000000000000000000012 /* ResourceAndUISmokeTests.swift in Sources */,
+				C10000000000000000000013 /* KeyboardKeyControl.swift in Test Sources */,
+				C10000000000000000000014 /* KeyPopupPresenter.swift in Test Sources */,
+				C10000000000000000000016 /* EmojiCell.swift in Test Sources */,
+				C10000000000000000000017 /* EmojiKeyboardView.swift in Test Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -512,6 +618,38 @@
 			};
 			name = Release;
 		};
+		CB0000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "";
+				CODE_SIGNING_ALLOWED = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rafiqkn.KnKeysTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "";
+			};
+			name = Debug;
+		};
+		CB0000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "";
+				CODE_SIGNING_ALLOWED = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rafiqkn.KnKeysTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -541,6 +679,15 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		CA00000000000000000000001 /* Build configuration list for PBXNativeTarget "KnKeysTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CB0000000000000000000001 /* Debug */,
+				CB0000000000000000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
