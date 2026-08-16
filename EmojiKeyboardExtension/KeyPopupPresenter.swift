@@ -35,7 +35,7 @@ final class KeyPopupView: UIView {
 
 final class KeyPopupPresenter {
     private weak var container: UIView?
-    private let popup = KeyPopupView()
+    let popup = KeyPopupView()
     var isEnabled = true
 
     init(container: UIView) {
@@ -58,6 +58,10 @@ final class KeyPopupPresenter {
         )
         popup.isHidden = false
         container.bringSubviewToFront(popup)
+        popup.layer.shadowPath = UIBezierPath(
+            roundedRect: popup.bounds,
+            cornerRadius: popup.layer.cornerRadius
+        ).cgPath
 
         if UIAccessibility.isReduceMotionEnabled {
             popup.alpha = 1

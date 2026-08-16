@@ -27,6 +27,7 @@ final class QwertyKeyboardView: UIView {
     private var candidateHeightConstraint: NSLayoutConstraint!
     private var deleteDelayWorkItem: DispatchWorkItem?
     private var deleteRepeatTimer: Timer?
+    private weak var activeInsertKey: KeyboardKeyControl?
     private var topConstraint: NSLayoutConstraint!
     private var leadingConstraint: NSLayoutConstraint!
     private var trailingConstraint: NSLayoutConstraint!
@@ -84,6 +85,7 @@ final class QwertyKeyboardView: UIView {
         stopDeleteRepeat()
         homeRowGesture?.cancel()
         keyPopupPresenter.hide()
+        activeInsertKey = nil
     }
 
     func update(state: KeyboardState, theme: KeyboardTheme, size: CGSize, returnKeyTitle: String) {
@@ -255,11 +257,32 @@ final class QwertyKeyboardView: UIView {
         case .backspace:
             key.addTarget(self, action: #selector(backspaceTouchDown(_:)), for: .touchDown)
             key.addTarget(self, action: #selector(backspaceTouchEnded(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel, .touchDragExit])
+        case .character, .space:
+            key.addTarget(self, action: #selector(insertKeyTouchDown(_:)), for: .touchDown)
+            key.addTarget(self, action: #selector(insertKeyLiftedInside(_:)), for: .touchUpInside)
+            key.addTarget(self, action: #selector(insertKeyLiftedOutside(_:)), for: [.touchUpOutside, .touchCancel])
         case .spacer:
             break
         default:
             key.addTarget(self, action: #selector(keyTapped(_:)), for: .touchUpInside)
         }
+    }
+
+    @objc private func insertKeyTouchDown(_ sender: KeyboardKeyControl) {
+        activeInsertKey = sender
+        delegate?.qwertyKeyboardView(self, didTrigger: sender.action)
+    }
+
+    @objc private func insertKeyLiftedInside(_ sender: KeyboardKeyControl) {
+        if activeInsertKey === sender {
+            activeInsertKey = nil
+        }
+    }
+
+    @objc private func insertKeyLiftedOutside(_ sender: KeyboardKeyControl) {
+        guard activeInsertKey === sender else { return }
+        activeInsertKey = nil
+        delegate?.qwertyKeyboardView(self, didTrigger: .retractLastInsert)
     }
 
     private func updateKeyAppearance() {

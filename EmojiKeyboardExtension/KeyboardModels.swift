@@ -28,7 +28,18 @@ enum KeyboardKeyAction: Equatable {
     case mode(KeyboardMode)
     case gestureDelete(GestureDeletionLevel)
     case predictionSelected(String)
+    case retractLastInsert
     case spacer
+}
+
+/// A touch-down insertion is undone only when the document still ends with
+/// exactly what was inserted. Stale retractions (multi-touch, later edits)
+/// fail the suffix check and become no-ops.
+enum InsertionRetractionPolicy {
+    static func isRetractable(insertedText: String?, contextBefore: String?) -> Bool {
+        guard let insertedText, !insertedText.isEmpty else { return false }
+        return (contextBefore ?? "").hasSuffix(insertedText)
+    }
 }
 
 enum KeyboardKeyStyle {

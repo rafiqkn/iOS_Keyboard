@@ -10,11 +10,13 @@ A native, offline custom iOS keyboard with a lightweight QWERTY layout and emoji
 - Three local word-prediction candidates using a Trie-backed English lexicon and previous-word context
 - Safe partial-word replacement when a prediction is selected
 - Optional key popups and system keystroke sound controls
+- Optional word prediction toggle (on by default) with zero-cost OFF path
 - Theme settings with Automatic, Light, Dark, and Custom modes
 - Custom key, keyboard, function-key, accent-key, text, and suggestion-bar colors
 - Configurable corner radius, bounded key height, and font size
 - Live theme preview in the host app
 - Shift, Caps Lock, delete repeat, adaptive return, and double-space period
+- Touch-down character and space insertion with slide-off retraction for instant, accurate typing
 - Emoji mode with nine categories and a scrollable grid
 - Emoji insertion through `textDocumentProxy`
 - Space, delete, return, and keyboard mode keys

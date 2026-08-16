@@ -31,6 +31,50 @@ final class TextContextParserTests: XCTestCase {
     }
 }
 
+final class InsertionRetractionPolicyTests: XCTestCase {
+    func testRetractsWhenContextEndsWithInsertedText() {
+        XCTAssertTrue(InsertionRetractionPolicy.isRetractable(
+            insertedText: "a",
+            contextBefore: "hello a"
+        ))
+    }
+
+    func testRefusesWhenContextDoesNotEndWithInsertedText() {
+        XCTAssertFalse(InsertionRetractionPolicy.isRetractable(
+            insertedText: "a",
+            contextBefore: "hello ab"
+        ))
+    }
+
+    func testHandlesDoubleSpacePeriodRetraction() {
+        XCTAssertTrue(InsertionRetractionPolicy.isRetractable(
+            insertedText: ". ",
+            contextBefore: "Hi. "
+        ))
+    }
+
+    func testNilInsertedTextIsNotRetractable() {
+        XCTAssertFalse(InsertionRetractionPolicy.isRetractable(
+            insertedText: nil,
+            contextBefore: "hello"
+        ))
+    }
+
+    func testEmptyInsertedTextIsNotRetractable() {
+        XCTAssertFalse(InsertionRetractionPolicy.isRetractable(
+            insertedText: "",
+            contextBefore: "hello"
+        ))
+    }
+
+    func testNilContextWithNonEmptyInsertedIsNotRetractable() {
+        XCTAssertFalse(InsertionRetractionPolicy.isRetractable(
+            insertedText: "a",
+            contextBefore: nil
+        ))
+    }
+}
+
 final class WordPredictionEngineTests: XCTestCase {
     private let dictionary = FakePredictionDictionary(words: [
         DictionaryWord(word: "hello", frequencyRank: 1),
@@ -162,6 +206,22 @@ final class TapTypingPerformanceTests: XCTestCase {
         }
     }
 
+    func testDownInsertRetractCycleBenchmark() {
+        let proxy = BenchmarkTextProxy()
+
+        measure {
+            for _ in 0..<10_000 {
+                proxy.insertText("a")
+                if InsertionRetractionPolicy.isRetractable(
+                    insertedText: "a",
+                    contextBefore: proxy.documentContextBeforeInput
+                ) {
+                    proxy.deleteBackward()
+                }
+            }
+        }
+    }
+
     func testPredictionOffBenchmark() {
         let predictionEnabled = false
         let before: String? = "please hel"
@@ -243,6 +303,8 @@ private struct FakePredictionDictionary: WordPredictionDictionaryProviding {
 
 private final class BenchmarkTextProxy {
     private var storage = ""
+
+    var documentContextBeforeInput: String? { storage }
 
     func insertText(_ text: String) {
         storage.append(contentsOf: text)

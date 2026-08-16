@@ -48,6 +48,7 @@ final class UIKitComponentSmokeTests: XCTestCase {
         let initialBounds = container.bounds
 
         presenter.show(text: "A", above: key, theme: .light)
+        XCTAssertNotNil(presenter.popup.layer.shadowPath, "Popup should cache its shadow path to avoid per-frame offscreen rendering")
         presenter.hide()
 
         XCTAssertEqual(container.bounds, initialBounds)

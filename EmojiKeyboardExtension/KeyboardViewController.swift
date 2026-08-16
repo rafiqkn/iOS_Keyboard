@@ -32,6 +32,8 @@ final class KeyboardViewController: UIInputViewController {
     private var predictionWorkItem: DispatchWorkItem?
     private var latestPrediction: PredictionDisplayRecord?
     private var lastPredictionContextBefore: String?
+    private var pendingInsertionText: String?
+    private var pendingInsertionRestoreText: String?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -174,6 +176,8 @@ final class KeyboardViewController: UIInputViewController {
         switch action {
         case .character(let text):
             insertText(text)
+            pendingInsertionText = text
+            pendingInsertionRestoreText = nil
             cancelPredictionForTextMutation()
             if state.mode == .letters && state.shift == .on {
                 state.shift = .off
@@ -186,8 +190,10 @@ final class KeyboardViewController: UIInputViewController {
             cancelPredictionForTextMutation()
             playInputClick()
         case .space:
-            insertSpace()
+            pendingInsertionText = insertSpace()
             cancelPredictionForTextMutation()
+        case .retractLastInsert:
+            retractPendingInsertion()
         case .returnKey:
             insertText("\n")
             cancelPredictionForTextMutation()
@@ -215,6 +221,28 @@ final class KeyboardViewController: UIInputViewController {
         predictionWorkItem = nil
         lastPredictionContextBefore = nil
         latestPrediction = nil
+    }
+
+    /// Undoes the most recent touch-down insertion when the finger slid off
+    /// the key before release. Stale requests (later edits, multi-touch) fail
+    /// the suffix check and do nothing.
+    private func retractPendingInsertion() {
+        let inserted = pendingInsertionText
+        let restore = pendingInsertionRestoreText
+        pendingInsertionText = nil
+        pendingInsertionRestoreText = nil
+        guard let inserted,
+              InsertionRetractionPolicy.isRetractable(
+                insertedText: inserted,
+                contextBefore: textDocumentProxy.documentContextBeforeInput
+              ) else { return }
+        for _ in 0..<inserted.count {
+            textDocumentProxy.deleteBackward()
+        }
+        if let restore, !restore.isEmpty {
+            textDocumentProxy.insertText(restore)
+        }
+        cancelPredictionForTextMutation()
     }
 
     private func disablePredictionsIfNeeded() {
@@ -305,17 +333,23 @@ final class KeyboardViewController: UIInputViewController {
         playInputClick()
     }
 
-    private func insertSpace() {
+    @discardableResult
+    private func insertSpace() -> String {
         let now = ProcessInfo.processInfo.systemUptime
         let context = textDocumentProxy.documentContextBeforeInput ?? ""
+        let inserted: String
         if now - lastSpaceTapTime < 0.42, context.hasSuffix(" "), shouldInsertPeriod(after: context) {
             textDocumentProxy.deleteBackward()
             textDocumentProxy.insertText(". ")
+            inserted = ". "
+            pendingInsertionRestoreText = " "
         } else {
             textDocumentProxy.insertText(" ")
+            inserted = " "
         }
         lastSpaceTapTime = now
         playInputClick()
+        return inserted
     }
 
     private func shouldInsertPeriod(after context: String) -> Bool {
