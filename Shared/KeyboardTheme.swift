@@ -180,12 +180,14 @@ final class ThemeStore {
         customTheme: KeyboardTheme,
         deletionFeedbackAnimation: Bool,
         keyPopupEnabled: Bool,
-        keystrokeSoundMode: KeystrokeSoundMode
+        keystrokeSoundMode: KeystrokeSoundMode,
+        predictionEnabled: Bool = true
     ) {
         let interactionSettings = KeyboardInteractionSettings(
             deletionFeedbackAnimation: deletionFeedbackAnimation,
             keyPopupEnabled: keyPopupEnabled,
-            keystrokeSoundMode: keystrokeSoundMode
+            keystrokeSoundMode: keystrokeSoundMode,
+            predictionEnabled: predictionEnabled
         )
         defaults.set(selection.rawValue, forKey: ThemeStoreKeys.selection)
         defaults.set(deletionFeedbackAnimation, forKey: ThemeStoreKeys.deletionFeedbackAnimation)

@@ -13,6 +13,7 @@ final class ThemeEditorModel: ObservableObject {
     @Published var deletionFeedbackAnimation: Bool
     @Published var keyPopupEnabled: Bool
     @Published var keystrokeSoundMode: KeystrokeSoundMode
+    @Published var predictionEnabled: Bool
     @Published private(set) var saveStatus: SaveStatus = .saved
     @Published var didSave = false
 
@@ -27,6 +28,7 @@ final class ThemeEditorModel: ObservableObject {
         deletionFeedbackAnimation = interactionSettings.deletionFeedbackAnimation
         keyPopupEnabled = interactionSettings.keyPopupEnabled
         keystrokeSoundMode = interactionSettings.keystrokeSoundMode
+        predictionEnabled = interactionSettings.predictionEnabled
     }
 
     func scheduleAutoSave() {
@@ -59,7 +61,8 @@ final class ThemeEditorModel: ObservableObject {
             customTheme: validatedTheme,
             deletionFeedbackAnimation: deletionFeedbackAnimation,
             keyPopupEnabled: keyPopupEnabled,
-            keystrokeSoundMode: keystrokeSoundMode
+            keystrokeSoundMode: keystrokeSoundMode,
+            predictionEnabled: predictionEnabled
         )
         saveStatus = .saved
         didSave = true
@@ -124,6 +127,7 @@ struct ThemeSettingsView: View {
         .onChange(of: model.deletionFeedbackAnimation) { _ in model.scheduleAutoSave() }
         .onChange(of: model.keyPopupEnabled) { _ in model.scheduleAutoSave() }
         .onChange(of: model.keystrokeSoundMode) { _ in model.scheduleAutoSave() }
+        .onChange(of: model.predictionEnabled) { _ in model.scheduleAutoSave() }
         .onDisappear {
             model.flushPendingChanges()
         }
@@ -323,6 +327,14 @@ struct ThemeSettingsView: View {
                 title: "Key Popups",
                 icon: "rectangle.on.rectangle",
                 isOn: $model.keyPopupEnabled
+            )
+
+            Divider()
+
+            ThemeToggleRow(
+                title: "Word Prediction",
+                icon: "text.badge.checkmark",
+                isOn: $model.predictionEnabled
             )
 
             Divider()

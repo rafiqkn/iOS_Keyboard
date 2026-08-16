@@ -162,6 +162,33 @@ final class TapTypingPerformanceTests: XCTestCase {
         }
     }
 
+    func testPredictionOffBenchmark() {
+        let predictionEnabled = false
+        let before: String? = "please hel"
+
+        measure {
+            for _ in 0..<10_000 {
+                if predictionEnabled {
+                    _ = TextContextParser.parse(before: before, after: nil)
+                }
+            }
+        }
+    }
+
+    func testPredictionOnBenchmark() {
+        let engine = BasicWordPredictionEngine(
+            dictionary: LocalWordPredictionDictionary(bundle: Bundle(for: Self.self))
+        )
+        let before: String? = "please hel"
+
+        measure {
+            for _ in 0..<10_000 {
+                guard let context = TextContextParser.parse(before: before, after: nil) else { continue }
+                _ = engine.predict(for: context)
+            }
+        }
+    }
+
     func testCandidateUpdateBenchmark() {
         let view = QwertyKeyboardView(frame: CGRect(x: 0, y: 0, width: 390, height: 300))
         view.update(

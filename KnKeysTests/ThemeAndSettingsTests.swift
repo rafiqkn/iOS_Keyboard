@@ -99,6 +99,27 @@ final class ThemeAndSettingsTests: XCTestCase {
         XCTAssertFalse(manager.reloadIfNeeded(for: .light))
     }
 
+    func testPredictionDefaultsOnForLegacySettingsData() throws {
+        let legacy = "{\"deletionFeedbackAnimation\":false,\"keyPopupEnabled\":true,\"keystrokeSoundMode\":\"system\"}"
+        defaults.set(legacy.data(using: .utf8), forKey: ThemeStoreKeys.interactionSettings)
+
+        XCTAssertTrue(ThemeStore(defaults: defaults).loadInteractionSettings().predictionEnabled)
+    }
+
+    func testPredictionDisabledPersists() {
+        let store = ThemeStore(defaults: defaults)
+        store.save(
+            selection: .automatic,
+            customTheme: .light,
+            deletionFeedbackAnimation: false,
+            keyPopupEnabled: true,
+            keystrokeSoundMode: .system,
+            predictionEnabled: false
+        )
+
+        XCTAssertFalse(store.loadInteractionSettings().predictionEnabled)
+    }
+
     func testInteractionSettingsCodableRoundTrip() throws {
         let settings = KeyboardInteractionSettings(
             deletionFeedbackAnimation: true,

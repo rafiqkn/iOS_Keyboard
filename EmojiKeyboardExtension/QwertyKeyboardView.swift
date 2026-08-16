@@ -281,6 +281,10 @@ final class QwertyKeyboardView: UIView {
         }
     }
 
+    var hasVisibleCandidates: Bool {
+        candidateBarContent != .hidden
+    }
+
     func showCandidates(_ content: CandidateBarContent) {
         guard candidateBarContent != content else { return }
         let candidates: [String]

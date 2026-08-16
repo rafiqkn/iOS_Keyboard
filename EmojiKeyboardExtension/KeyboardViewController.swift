@@ -32,7 +32,6 @@ final class KeyboardViewController: UIInputViewController {
     private var predictionWorkItem: DispatchWorkItem?
     private var latestPrediction: PredictionDisplayRecord?
     private var lastPredictionContextBefore: String?
-    private var lastPredictionContextAfter: String?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -76,10 +75,18 @@ final class KeyboardViewController: UIInputViewController {
         if themeChanged {
             updateHeight()
         }
-        let contextBefore = textDocumentProxy.documentContextBeforeInput
-        let contextAfter = textDocumentProxy.documentContextAfterInput
+
+        let predictionEnabled = themeManager.interactionSettings.predictionEnabled
+        let contextBefore = predictionEnabled || automaticCapitalizationNeedsContext
+            ? textDocumentProxy.documentContextBeforeInput
+            : nil
         updateAutomaticShiftIfNeeded(contextBefore: contextBefore)
-        schedulePredictions(before: contextBefore, after: contextAfter)
+
+        if predictionEnabled {
+            schedulePredictions(before: contextBefore)
+        } else {
+            disablePredictionsIfNeeded()
+        }
     }
 
     private func installKeyboardView(_ keyboardView: UIView) {
@@ -100,8 +107,8 @@ final class KeyboardViewController: UIInputViewController {
         guard state.mode != mode else { return }
         predictionGeneration += 1
         predictionWorkItem?.cancel()
+        predictionWorkItem = nil
         lastPredictionContextBefore = nil
-        lastPredictionContextAfter = nil
         latestPrediction = nil
         qwertyView.showCandidates(.hidden)
         qwertyView.cancelActiveInteractions()
@@ -167,7 +174,7 @@ final class KeyboardViewController: UIInputViewController {
         switch action {
         case .character(let text):
             insertText(text)
-            invalidatePredictions()
+            cancelPredictionForTextMutation()
             if state.mode == .letters && state.shift == .on {
                 state.shift = .off
                 qwertyView.updateShift(state.shift)
@@ -176,14 +183,14 @@ final class KeyboardViewController: UIInputViewController {
             updateShiftState()
         case .backspace:
             textDocumentProxy.deleteBackward()
-            invalidatePredictions()
+            cancelPredictionForTextMutation()
             playInputClick()
         case .space:
             insertSpace()
-            invalidatePredictions()
+            cancelPredictionForTextMutation()
         case .returnKey:
             insertText("\n")
-            invalidatePredictions()
+            cancelPredictionForTextMutation()
             if state.mode == .letters && state.shift != .capsLock {
                 state.shift = .on
                 qwertyView.updateShift(state.shift)
@@ -194,7 +201,7 @@ final class KeyboardViewController: UIInputViewController {
             setMode(mode)
         case .gestureDelete(let level):
             delete(using: level)
-            invalidatePredictions()
+            cancelPredictionForTextMutation()
         case .predictionSelected(let word):
             applyPrediction(word)
         case .spacer:
@@ -202,23 +209,30 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
-    private func invalidatePredictions() {
+    private func cancelPredictionForTextMutation() {
         predictionGeneration += 1
         predictionWorkItem?.cancel()
+        predictionWorkItem = nil
         lastPredictionContextBefore = nil
-        lastPredictionContextAfter = nil
         latestPrediction = nil
+    }
+
+    private func disablePredictionsIfNeeded() {
+        guard predictionWorkItem != nil ||
+                lastPredictionContextBefore != nil ||
+                latestPrediction != nil ||
+                qwertyView.hasVisibleCandidates else { return }
+        cancelPredictionForTextMutation()
         qwertyView.showCandidates(.hidden)
     }
 
-    private func schedulePredictions(before: String?, after: String?) {
+    private func schedulePredictions(before: String?) {
         guard state.mode == .letters else {
-            invalidatePredictions()
+            disablePredictionsIfNeeded()
             return
         }
-        guard before != lastPredictionContextBefore || after != lastPredictionContextAfter else { return }
+        guard before != lastPredictionContextBefore else { return }
         lastPredictionContextBefore = before
-        lastPredictionContextAfter = after
 
         predictionGeneration += 1
         predictionWorkItem?.cancel()
@@ -228,7 +242,7 @@ final class KeyboardViewController: UIInputViewController {
         workItem = DispatchWorkItem { [weak self] in
             guard let self,
                   workItem?.isCancelled == false,
-                  let context = TextContextParser.parse(before: before, after: after) else { return }
+                  let context = TextContextParser.parse(before: before, after: nil) else { return }
             let predictions = engine.predict(for: context)
             guard workItem?.isCancelled == false else { return }
             DispatchQueue.main.async { [weak self] in
@@ -338,6 +352,17 @@ final class KeyboardViewController: UIInputViewController {
             state.shift = shouldShift ? .on : .off
             didSetInitialShiftState = true
             qwertyView.updateShift(state.shift)
+        }
+    }
+
+    private var automaticCapitalizationNeedsContext: Bool {
+        switch textDocumentProxy.autocapitalizationType ?? .sentences {
+        case .words, .sentences:
+            return true
+        case .none, .allCharacters:
+            return false
+        @unknown default:
+            return false
         }
     }
 

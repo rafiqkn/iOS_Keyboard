@@ -29,6 +29,7 @@ final class ThemeEditorAutoSaveTests: XCTestCase {
         model.keyPopupEnabled = false
         model.deletionFeedbackAnimation = true
         model.keystrokeSoundMode = .off
+        model.predictionEnabled = false
 
         model.scheduleAutoSave()
         XCTAssertEqual(model.saveStatus, .saving)
@@ -43,7 +44,8 @@ final class ThemeEditorAutoSaveTests: XCTestCase {
             KeyboardInteractionSettings(
                 deletionFeedbackAnimation: true,
                 keyPopupEnabled: false,
-                keystrokeSoundMode: .off
+                keystrokeSoundMode: .off,
+                predictionEnabled: false
             )
         )
         XCTAssertEqual(store.revision, 1)
