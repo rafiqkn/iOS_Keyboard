@@ -48,32 +48,45 @@ final class BasicSwipeCandidateGenerator: SwipeCandidateGenerating {
 
 final class BasicSwipeCandidateRanker: SwipeCandidateRanking {
     private let maximumRankedCandidates: Int
+    private let maximumAlignmentCandidates: Int
 
-    init(maximumRankedCandidates: Int = 50) {
+    init(maximumRankedCandidates: Int = 50, maximumAlignmentCandidates: Int = 36) {
         self.maximumRankedCandidates = maximumRankedCandidates
+        self.maximumAlignmentCandidates = maximumAlignmentCandidates
     }
 
     func rank(_ candidates: [DictionaryWord], for path: SwipePath) -> [SwipeCandidate] {
         let sequence = path.keySequence
         guard !sequence.isEmpty else { return [] }
-        return candidates
-            .map { word in
-                let sequenceScore = alignmentScore(word.signature, sequence)
-                let geometryScore = geometricScore(word: word.word, path: path)
-                let frequencyScore = 1 / (1 + log10(Double(word.frequencyRank + 2)))
-                let score = geometryScore * 0.50 + sequenceScore * 0.35 + frequencyScore * 0.15
-                return SwipeCandidate(
-                    word: word.word,
-                    score: score,
-                    frequencyRank: word.frequencyRank
-                )
-            }
-            .sorted {
-                if $0.score == $1.score { return $0.frequencyRank < $1.frequencyRank }
-                return $0.score > $1.score
-            }
-            .prefix(maximumRankedCandidates)
-            .map { $0 }
+
+        let shortlisted = candidates.map { word -> (word: DictionaryWord, geometry: Double, frequency: Double) in
+            let geometry = geometricScore(word: word.word, path: path)
+            let frequency = 1 / (1 + log10(Double(word.frequencyRank + 2)))
+            return (word, geometry, frequency)
+        }
+        .sorted {
+            let left = $0.geometry * 0.82 + $0.frequency * 0.18
+            let right = $1.geometry * 0.82 + $1.frequency * 0.18
+            if left == right { return $0.word.frequencyRank < $1.word.frequencyRank }
+            return left > right
+        }
+        .prefix(maximumAlignmentCandidates)
+
+        return shortlisted.map { item in
+            let sequenceScore = alignmentScore(item.word.signature, sequence)
+            let score = item.geometry * 0.50 + sequenceScore * 0.35 + item.frequency * 0.15
+            return SwipeCandidate(
+                word: item.word.word,
+                score: score,
+                frequencyRank: item.word.frequencyRank
+            )
+        }
+        .sorted {
+            if $0.score == $1.score { return $0.frequencyRank < $1.frequencyRank }
+            return $0.score > $1.score
+        }
+        .prefix(maximumRankedCandidates)
+        .map { $0 }
     }
 
     private func alignmentScore(_ target: [Character], _ observed: [Character]) -> Double {

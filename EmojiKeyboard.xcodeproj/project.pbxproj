@@ -24,6 +24,8 @@
 		10000000000000000000000F /* KeyboardTheme.swift in Extension Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000016 /* KeyboardTheme.swift */; };
 		100000000000000000000010 /* ThemeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000019 /* ThemeManager.swift */; };
 		100000000000000000000011 /* ThemeSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001A /* ThemeSettingsView.swift */; };
+		C10000000000000000000018 /* ThemeEditorAutoSaveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000007 /* ThemeEditorAutoSaveTests.swift */; };
+		C10000000000000000000019 /* ThemeSettingsView.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001A /* ThemeSettingsView.swift */; };
 		100000000000000000000012 /* SwipeTypingModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001B /* SwipeTypingModels.swift */; };
 		100000000000000000000013 /* SwipeDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001C /* SwipeDictionary.swift */; };
 		100000000000000000000014 /* SwipeTypingEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000001D /* SwipeTypingEngine.swift */; };
@@ -107,6 +109,7 @@
 		200000000000000000000018 /* EmojiKeyboardExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = EmojiKeyboardExtension.entitlements; sourceTree = "<group>"; };
 		200000000000000000000019 /* ThemeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeManager.swift; sourceTree = "<group>"; };
 		20000000000000000000001A /* ThemeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeSettingsView.swift; sourceTree = "<group>"; };
+		C20000000000000000000007 /* ThemeEditorAutoSaveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThemeEditorAutoSaveTests.swift; sourceTree = "<group>"; };
 		20000000000000000000001B /* SwipeTypingModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeTypingModels.swift; sourceTree = "<group>"; };
 		20000000000000000000001C /* SwipeDictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeDictionary.swift; sourceTree = "<group>"; };
 		20000000000000000000001D /* SwipeTypingEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeTypingEngine.swift; sourceTree = "<group>"; };
@@ -234,6 +237,7 @@
 				C20000000000000000000003 /* PredictionAndSwipeTests.swift */,
 				C20000000000000000000004 /* KeyboardHeightPolicyTests.swift */,
 				C20000000000000000000006 /* ResourceAndUISmokeTests.swift */,
+				C20000000000000000000007 /* ThemeEditorAutoSaveTests.swift */,
 			);
 			path = KnKeysTests;
 			sourceTree = "<group>";
@@ -428,12 +432,14 @@
 				C1000000000000000000000D /* SwipeTypingEngine.swift in Test Sources */,
 				C1000000000000000000000E /* SwipeDictionary.swift in Test Sources */,
 				C1000000000000000000000F /* WordPredictionModels.swift in Test Sources */,
-				C10000000000000000000010 /* WordPredictionEngine.swift in Test Sources */,
+						C10000000000000000000010 /* WordPredictionEngine.swift in Test Sources */,
 				C10000000000000000000012 /* ResourceAndUISmokeTests.swift in Sources */,
 				C10000000000000000000013 /* KeyboardKeyControl.swift in Test Sources */,
 				C10000000000000000000014 /* KeyPopupPresenter.swift in Test Sources */,
 				C10000000000000000000016 /* EmojiCell.swift in Test Sources */,
 				C10000000000000000000017 /* EmojiKeyboardView.swift in Test Sources */,
+				C10000000000000000000018 /* ThemeEditorAutoSaveTests.swift in Sources */,
+				C10000000000000000000019 /* ThemeSettingsView.swift in Test Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -535,7 +541,7 @@
 				CODE_SIGN_ENTITLEMENTS = EmojiKeyboard/EmojiKeyboard.entitlements;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = AH34H7VVG5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = KnKeys;
@@ -559,7 +565,7 @@
 				CODE_SIGN_ENTITLEMENTS = EmojiKeyboard/EmojiKeyboard.entitlements;
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = AH34H7VVG5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = KnKeys;
@@ -582,7 +588,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = EmojiKeyboardExtension/EmojiKeyboardExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = AH34H7VVG5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EmojiKeyboardExtension/Info.plist;
@@ -603,7 +609,7 @@
 				CLANG_ENABLE_OBJC_WEAK = YES;
 				CODE_SIGN_ENTITLEMENTS = EmojiKeyboardExtension/EmojiKeyboardExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = AH34H7VVG5;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = EmojiKeyboardExtension/Info.plist;

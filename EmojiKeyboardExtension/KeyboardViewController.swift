@@ -41,6 +41,7 @@ final class KeyboardViewController: UIInputViewController {
     private var didSetInitialShiftState = false
     private var swipeGeneration = 0
     private var predictionGeneration = 0
+    private var predictionWorkItem: DispatchWorkItem?
     private var latestPrediction: PredictionDisplayRecord?
     private var swipeInsertedTrailingSpace = false
     private var lastSwipeInsertion: SwipeInsertionRecord?
@@ -56,7 +57,6 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        updateAppearanceAndLayout()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -90,7 +90,6 @@ final class KeyboardViewController: UIInputViewController {
         }
         updateAutomaticShiftIfNeeded()
         schedulePredictions()
-        updateAppearanceAndLayout()
     }
 
     private func installKeyboardView(_ keyboardView: UIView) {
@@ -111,6 +110,7 @@ final class KeyboardViewController: UIInputViewController {
         guard state.mode != mode else { return }
         swipeGeneration += 1
         predictionGeneration += 1
+        predictionWorkItem?.cancel()
         latestPrediction = nil
         qwertyView.showCandidates(.hidden)
         qwertyView.cancelActiveInteractions()
@@ -236,17 +236,21 @@ final class KeyboardViewController: UIInputViewController {
                 after: textDocumentProxy.documentContextAfterInput
               ) else {
             predictionGeneration += 1
+            predictionWorkItem?.cancel()
             latestPrediction = nil
             qwertyView.showCandidates(.hidden)
             return
         }
 
         predictionGeneration += 1
+        predictionWorkItem?.cancel()
         let generation = predictionGeneration
         let engine = wordPredictionEngine
-        predictionQueue.asyncAfter(deadline: .now() + 0.04) { [weak self] in
-            guard let self, generation == self.predictionGeneration else { return }
+        var workItem: DispatchWorkItem?
+        workItem = DispatchWorkItem { [weak self] in
+            guard let self, workItem?.isCancelled == false else { return }
             let predictions = engine.predict(for: context)
+            guard workItem?.isCancelled == false else { return }
             DispatchQueue.main.async { [weak self] in
                 guard let self,
                       generation == self.predictionGeneration,
@@ -263,6 +267,10 @@ final class KeyboardViewController: UIInputViewController {
                 )
                 self.qwertyView.showCandidates(.predictions(predictions.map(\.word)))
             }
+        }
+        predictionWorkItem = workItem
+        if let workItem {
+            predictionQueue.async(execute: workItem)
         }
     }
 

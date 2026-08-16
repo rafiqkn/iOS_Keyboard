@@ -99,6 +99,24 @@ final class WordPredictionEngineTests: XCTestCase {
         )
         XCTAssertTrue(engine.predict(for: context).isEmpty)
     }
+
+    func testPrefixPredictionBenchmark() {
+        let engine = BasicWordPredictionEngine(dictionary: LocalWordPredictionDictionary())
+        let context = PredictionContext(
+            currentWord: "th",
+            previousWord: nil,
+            textBeforeCursor: "th",
+            textAfterCursor: "",
+            replacementCount: 2,
+            shouldCapitalize: false
+        )
+
+        measure {
+            for _ in 0..<1_000 {
+                _ = engine.predict(for: context)
+            }
+        }
+    }
 }
 
 private struct FakePredictionDictionary: WordPredictionDictionaryProviding {
@@ -155,6 +173,20 @@ final class SwipeTypingEngineTests: XCTestCase {
     func testDictionaryWordSignatureCollapsesRepeatedLetters() {
         let word = DictionaryWord(word: "letter", frequencyRank: 1)
         XCTAssertEqual(word.signature, Array("leter"))
+    }
+
+    func testSwipeRecognitionBenchmark() {
+        let dictionary = FakeSwipeDictionary(words: (0..<300).map { index in
+            DictionaryWord(word: "hello\(index)", frequencyRank: index)
+        })
+        let path = makePath(sequence: "helo")
+        let ranker = BasicSwipeCandidateRanker()
+
+        measure {
+            for _ in 0..<100 {
+                _ = ranker.rank(dictionary.allWords, for: path)
+            }
+        }
     }
 
     private func makePath(sequence: String) -> SwipePath {

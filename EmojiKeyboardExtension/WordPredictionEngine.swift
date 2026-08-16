@@ -1,7 +1,13 @@
 import Foundation
 
 final class LocalWordPredictionDictionary: WordPredictionDictionaryProviding {
-    private let words: [DictionaryWord]
+    private final class TrieNode {
+        var children: [Character: TrieNode] = [:]
+        var topWords: [DictionaryWord] = []
+    }
+
+    private let root = TrieNode()
+    private var wordsByValue: [String: DictionaryWord] = [:]
     private let bigrams: [String: [String]] = [
         "thank": ["you"],
         "how": ["are", "do", "can"],
@@ -27,38 +33,54 @@ final class LocalWordPredictionDictionary: WordPredictionDictionaryProviding {
     ]
 
     init(bundle: Bundle = .main, resourceName: String = "english_swipe_words") {
+        var builtWords: [String: DictionaryWord] = [:]
         guard let url = bundle.url(forResource: resourceName, withExtension: "txt"),
               let contents = try? String(contentsOf: url, encoding: .utf8) else {
-            words = []
             return
         }
+
         var seen = Set<String>()
-        words = contents.split(whereSeparator: \.isNewline).enumerated().compactMap { rank, line in
+        for (rank, line) in contents.split(whereSeparator: \.isNewline).enumerated() {
             let word = line.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             guard word.count >= 2,
                   word.allSatisfy({ $0.isLetter }),
-                  seen.insert(word).inserted else { return nil }
-            return DictionaryWord(word: word, frequencyRank: rank)
+                  seen.insert(word).inserted else { continue }
+            let dictionaryWord = DictionaryWord(word: word, frequencyRank: rank)
+            builtWords[word] = dictionaryWord
+            insert(dictionaryWord)
         }
+        wordsByValue = builtWords
     }
 
     func words(withPrefix prefix: String, limit: Int) -> [DictionaryWord] {
-        guard !prefix.isEmpty else { return [] }
-        return words.lazy.filter { $0.word.hasPrefix(prefix) }.prefix(limit).map { $0 }
+        guard limit > 0, !prefix.isEmpty else { return [] }
+        var node = root
+        for character in prefix.lowercased() {
+            guard let next = node.children[character] else { return [] }
+            node = next
+        }
+        return Array(node.topWords.prefix(limit))
     }
 
     func nextWords(after previousWord: String, limit: Int) -> [DictionaryWord] {
+        guard limit > 0 else { return [] }
         let requested = bigrams[previousWord.lowercased()] ?? []
-        guard !requested.isEmpty else { return [] }
-        let requestedSet = Set(requested)
-        return words.filter { requestedSet.contains($0.word) }
-            .sorted {
-                let left = requested.firstIndex(of: $0.word) ?? .max
-                let right = requested.firstIndex(of: $1.word) ?? .max
-                return left < right
+        return requested.prefix(limit).compactMap { wordsByValue[$0] }
+    }
+
+    private func insert(_ word: DictionaryWord) {
+        var node = root
+        for character in word.word {
+            let child = node.children[character] ?? {
+                let created = TrieNode()
+                node.children[character] = created
+                return created
+            }()
+            node = child
+            if node.topWords.count < 40 {
+                node.topWords.append(word)
             }
-            .prefix(limit)
-            .map { $0 }
+        }
     }
 }
 

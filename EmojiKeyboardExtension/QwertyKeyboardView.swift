@@ -22,6 +22,8 @@ final class QwertyKeyboardView: UIView {
     private var deletionFeedbackAnimationEnabled = false
     private lazy var keyPopupPresenter = KeyPopupPresenter(container: self)
     private var candidateBarContent = CandidateBarContent.hidden
+    private var candidateButtons: [UIButton] = []
+    private var swipeGeometryDirty = true
     private var candidateHeightConstraint: NSLayoutConstraint!
     private var deleteDelayWorkItem: DispatchWorkItem?
     private var deleteRepeatTimer: Timer?
@@ -41,6 +43,13 @@ final class QwertyKeyboardView: UIView {
         suggestionStack.isHidden = true
         suggestionStack.layer.cornerRadius = 6
         suggestionStack.clipsToBounds = true
+        candidateButtons = (0..<3).map { _ in
+            let button = UIButton(type: .system)
+            button.isHidden = true
+            button.addTarget(self, action: #selector(candidateTapped(_:)), for: .touchUpInside)
+            suggestionStack.addArrangedSubview(button)
+            return button
+        }
         rowsStack.axis = .vertical
         rowsStack.distribution = .fill
         addSubview(rowsStack)
@@ -83,6 +92,7 @@ final class QwertyKeyboardView: UIView {
         let shiftChanged = self.state.shift != state.shift
         let themeChanged = self.theme != theme
         let sizeChanged = lastLayoutSize != size
+        let returnKeyChanged = self.returnKeyTitle != returnKeyTitle
         self.state = state
         self.theme = theme
         self.returnKeyTitle = returnKeyTitle
@@ -95,6 +105,7 @@ final class QwertyKeyboardView: UIView {
         )
 
         if modeChanged {
+            swipeGeometryDirty = true
             candidateHeightConstraint.constant = 34
             suggestionStack.isHidden = state.mode != .letters
             if state.mode != .letters {
@@ -106,6 +117,7 @@ final class QwertyKeyboardView: UIView {
         }
         if metrics != nextMetrics || themeChanged {
             metrics = nextMetrics
+            swipeGeometryDirty = true
             rowsStack.spacing = nextMetrics.rowSpacing
             topConstraint.constant = nextMetrics.verticalPadding
             leadingConstraint.constant = nextMetrics.horizontalPadding
@@ -113,9 +125,12 @@ final class QwertyKeyboardView: UIView {
             bottomConstraint.constant = -nextMetrics.verticalPadding
             updateRowHeights(for: size, metrics: nextMetrics)
         } else if sizeChanged {
+            swipeGeometryDirty = true
             updateRowHeights(for: size, metrics: nextMetrics)
         }
-        updateKeyAppearance()
+        if modeChanged || themeChanged || returnKeyChanged {
+            updateKeyAppearance()
+        }
     }
 
     private func rebuildRows() {
@@ -178,6 +193,7 @@ final class QwertyKeyboardView: UIView {
         if let metrics {
             updateRowHeights(for: lastLayoutSize, metrics: metrics)
         }
+        swipeGeometryDirty = true
         configureSwipeGestureIfNeeded()
         updateKeyAppearance()
     }
@@ -186,9 +202,13 @@ final class QwertyKeyboardView: UIView {
         super.layoutSubviews()
         if let metrics, bounds.size != lastLayoutSize {
             lastLayoutSize = bounds.size
+            swipeGeometryDirty = true
             updateRowHeights(for: bounds.size, metrics: metrics)
         }
-        updateSwipeKeyGeometries()
+        if swipeGeometryDirty {
+            updateSwipeKeyGeometries()
+            swipeGeometryDirty = false
+        }
     }
 
     private func updateRowHeights(for size: CGSize, metrics: KeyboardMetrics) {
@@ -297,29 +317,26 @@ final class QwertyKeyboardView: UIView {
     }
 
     func showCandidates(_ content: CandidateBarContent) {
-        candidateBarContent = content
+        guard candidateBarContent != content else { return }
         let candidates: [String]
         switch content {
         case .hidden:
             candidates = []
         case .predictions(let values), .swipeAlternatives(let values):
-            candidates = values
+            candidates = Array(values.prefix(3))
         }
-        suggestionStack.arrangedSubviews.forEach {
-            suggestionStack.removeArrangedSubview($0)
-            $0.removeFromSuperview()
-        }
-        for candidate in candidates.prefix(3) {
-            let button = UIButton(type: .system)
+        candidateBarContent = content
+        let font = UIFont.systemFont(
+            ofSize: min(CGFloat(theme.fontSize) * 0.72, 17),
+            weight: .medium
+        )
+        for (index, button) in candidateButtons.enumerated() {
+            let candidate = index < candidates.count ? candidates[index] : nil
+            button.isHidden = candidate == nil
             button.setTitle(candidate, for: .normal)
+            button.titleLabel?.font = font
             button.setTitleColor(theme.textColor.uiColor, for: .normal)
-            button.titleLabel?.font = .systemFont(
-                ofSize: min(CGFloat(theme.fontSize) * 0.72, 17),
-                weight: .medium
-            )
             button.backgroundColor = theme.suggestionBarColor.uiColor
-            button.addTarget(self, action: #selector(candidateTapped(_:)), for: .touchUpInside)
-            suggestionStack.addArrangedSubview(button)
         }
         suggestionStack.isHidden = candidates.isEmpty
     }
