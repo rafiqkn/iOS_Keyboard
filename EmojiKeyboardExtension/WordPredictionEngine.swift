@@ -32,8 +32,7 @@ final class LocalWordPredictionDictionary: WordPredictionDictionaryProviding {
         "goodnight": ["everyone"]
     ]
 
-    init(bundle: Bundle = .main, resourceName: String = "english_swipe_words") {
-        var builtWords: [String: DictionaryWord] = [:]
+    init(bundle: Bundle = .main, resourceName: String = "english_prediction_words") {
         guard let url = bundle.url(forResource: resourceName, withExtension: "txt"),
               let contents = try? String(contentsOf: url, encoding: .utf8) else {
             return
@@ -46,38 +45,39 @@ final class LocalWordPredictionDictionary: WordPredictionDictionaryProviding {
                   word.allSatisfy({ $0.isLetter }),
                   seen.insert(word).inserted else { continue }
             let dictionaryWord = DictionaryWord(word: word, frequencyRank: rank)
-            builtWords[word] = dictionaryWord
+            wordsByValue[word] = dictionaryWord
             insert(dictionaryWord)
         }
-        wordsByValue = builtWords
     }
 
     func words(withPrefix prefix: String, limit: Int) -> [DictionaryWord] {
         guard limit > 0, !prefix.isEmpty else { return [] }
         var node = root
-        for character in prefix.lowercased() {
+        for character in prefix {
             guard let next = node.children[character] else { return [] }
             node = next
         }
+        if limit >= node.topWords.count { return node.topWords }
         return Array(node.topWords.prefix(limit))
     }
 
     func nextWords(after previousWord: String, limit: Int) -> [DictionaryWord] {
-        guard limit > 0 else { return [] }
-        let requested = bigrams[previousWord.lowercased()] ?? []
+        guard limit > 0, let requested = bigrams[previousWord] else { return [] }
         return requested.prefix(limit).compactMap { wordsByValue[$0] }
     }
 
     private func insert(_ word: DictionaryWord) {
         var node = root
         for character in word.word {
-            let child = node.children[character] ?? {
-                let created = TrieNode()
-                node.children[character] = created
-                return created
-            }()
+            let child: TrieNode
+            if let existing = node.children[character] {
+                child = existing
+            } else {
+                child = TrieNode()
+                node.children[character] = child
+            }
             node = child
-            if node.topWords.count < 40 {
+            if node.topWords.count < 3 {
                 node.topWords.append(word)
             }
         }
@@ -94,26 +94,19 @@ final class BasicWordPredictionEngine: WordPredicting {
     func predict(for context: PredictionContext) -> [WordPrediction] {
         let candidates: [DictionaryWord]
         if !context.currentWord.isEmpty {
-            candidates = dictionary.words(withPrefix: context.currentWord, limit: 40)
+            candidates = dictionary.words(withPrefix: context.currentWord, limit: 3)
         } else if let previousWord = context.previousWord {
-            candidates = dictionary.nextWords(after: previousWord, limit: 10)
+            candidates = dictionary.nextWords(after: previousWord, limit: 3)
         } else {
             return []
         }
 
+        let shouldCapitalize = context.shouldCapitalize
         return candidates.map { candidate in
-            let prefixScore = context.currentWord.isEmpty ? 0.65 : 1
-            let frequencyScore = 1 / (1 + log10(Double(candidate.frequencyRank + 2)))
-            let completionLength = max(0, candidate.word.count - context.currentWord.count)
-            let lengthScore = 1 / Double(completionLength + 1)
-            let score = prefixScore * 0.6 + frequencyScore * 0.25 + lengthScore * 0.15
-            let word = context.shouldCapitalize
+            let word = shouldCapitalize
                 ? candidate.word.prefix(1).uppercased() + candidate.word.dropFirst()
                 : candidate.word
-            return WordPrediction(word: word, score: score)
+            return WordPrediction(word: word, score: 1 / Double(candidate.frequencyRank + 1))
         }
-        .sorted { $0.score > $1.score }
-        .prefix(3)
-        .map { $0 }
     }
 }

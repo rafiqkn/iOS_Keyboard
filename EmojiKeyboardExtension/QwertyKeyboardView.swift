@@ -11,19 +11,19 @@ final class QwertyKeyboardView: UIView {
     private let suggestionStack = UIStackView()
     private var state = KeyboardState()
     private var keyControls: [KeyboardKeyControl] = []
+    private var letterKeyControls: [KeyboardKeyControl] = []
+    private weak var shiftKeyControl: KeyboardKeyControl?
     private var rowHeightConstraints: [NSLayoutConstraint] = []
     private var lastLayoutSize = CGSize.zero
     private var metrics: KeyboardMetrics?
     private var theme = KeyboardTheme.light
     private var returnKeyTitle = "return"
-    private var swipeGesture: SwipeTypingGestureRecognizer?
     private var homeRowGesture: HorizontalDeletionGestureRecognizer?
     private weak var homeRowView: UIView?
     private var deletionFeedbackAnimationEnabled = false
     private lazy var keyPopupPresenter = KeyPopupPresenter(container: self)
     private var candidateBarContent = CandidateBarContent.hidden
     private var candidateButtons: [UIButton] = []
-    private var swipeGeometryDirty = true
     private var candidateHeightConstraint: NSLayoutConstraint!
     private var deleteDelayWorkItem: DispatchWorkItem?
     private var deleteRepeatTimer: Timer?
@@ -77,12 +77,11 @@ final class QwertyKeyboardView: UIView {
     }
 
     deinit {
-        cancelActiveInteractions()
+        stopDeleteRepeat()
     }
 
     func cancelActiveInteractions() {
         stopDeleteRepeat()
-        swipeGesture?.cancel()
         homeRowGesture?.cancel()
         keyPopupPresenter.hide()
     }
@@ -105,7 +104,6 @@ final class QwertyKeyboardView: UIView {
         )
 
         if modeChanged {
-            swipeGeometryDirty = true
             candidateHeightConstraint.constant = 34
             suggestionStack.isHidden = state.mode != .letters
             if state.mode != .letters {
@@ -117,7 +115,6 @@ final class QwertyKeyboardView: UIView {
         }
         if metrics != nextMetrics || themeChanged {
             metrics = nextMetrics
-            swipeGeometryDirty = true
             rowsStack.spacing = nextMetrics.rowSpacing
             topConstraint.constant = nextMetrics.verticalPadding
             leadingConstraint.constant = nextMetrics.horizontalPadding
@@ -125,7 +122,6 @@ final class QwertyKeyboardView: UIView {
             bottomConstraint.constant = -nextMetrics.verticalPadding
             updateRowHeights(for: size, metrics: nextMetrics)
         } else if sizeChanged {
-            swipeGeometryDirty = true
             updateRowHeights(for: size, metrics: nextMetrics)
         }
         if modeChanged || themeChanged || returnKeyChanged {
@@ -135,15 +131,12 @@ final class QwertyKeyboardView: UIView {
 
     private func rebuildRows() {
         stopDeleteRepeat()
-        if let swipeGesture {
-            swipeGesture.cancel()
-            removeGestureRecognizer(swipeGesture)
-            self.swipeGesture = nil
-        }
         homeRowGesture?.cancel()
         homeRowGesture = nil
         homeRowView = nil
         keyControls.removeAll(keepingCapacity: true)
+        letterKeyControls.removeAll(keepingCapacity: true)
+        shiftKeyControl = nil
         NSLayoutConstraint.deactivate(rowHeightConstraints)
         rowHeightConstraints.removeAll(keepingCapacity: true)
         rowsStack.arrangedSubviews.forEach {
@@ -176,6 +169,14 @@ final class QwertyKeyboardView: UIView {
                 configurePopup(for: key)
                 rowView.addArrangedSubview(key)
                 keyControls.append(key)
+                switch key.action {
+                case .character(let value) where value.count == 1 && value.first?.isLetter == true:
+                    letterKeyControls.append(key)
+                case .shift:
+                    shiftKeyControl = key
+                default:
+                    break
+                }
 
                 if let previousKey {
                     key.widthAnchor.constraint(
@@ -193,8 +194,6 @@ final class QwertyKeyboardView: UIView {
         if let metrics {
             updateRowHeights(for: lastLayoutSize, metrics: metrics)
         }
-        swipeGeometryDirty = true
-        configureSwipeGestureIfNeeded()
         updateKeyAppearance()
     }
 
@@ -202,12 +201,7 @@ final class QwertyKeyboardView: UIView {
         super.layoutSubviews()
         if let metrics, bounds.size != lastLayoutSize {
             lastLayoutSize = bounds.size
-            swipeGeometryDirty = true
             updateRowHeights(for: bounds.size, metrics: metrics)
-        }
-        if swipeGeometryDirty {
-            updateSwipeKeyGeometries()
-            swipeGeometryDirty = false
         }
     }
 
@@ -224,49 +218,20 @@ final class QwertyKeyboardView: UIView {
         rowHeightConstraints.forEach { $0.constant = effectiveHeight }
     }
 
-    private func configureSwipeGestureIfNeeded() {
-        guard state.mode == .letters else { return }
-        let recognizer = SwipeTypingGestureRecognizer(
-            target: self,
-            action: #selector(swipeGestureChanged(_:))
-        )
-        if let homeRowGesture {
-            recognizer.require(toFail: homeRowGesture)
-        }
-        addGestureRecognizer(recognizer)
-        swipeGesture = recognizer
-        setNeedsLayout()
-    }
-
-    private func updateSwipeKeyGeometries() {
-        guard let swipeGesture, state.mode == .letters else { return }
-        var geometries: [Character: SwipeKeyGeometry] = [:]
-        for key in keyControls {
-            guard case .character(let value) = key.action,
-                  value.count == 1,
-                  let character = value.lowercased().first,
-                  character.isLetter else { continue }
-            geometries[character] = SwipeKeyGeometry(
-                letter: character,
-                frame: key.convert(key.bounds, to: self)
-            )
-        }
-        swipeGesture.keyGeometries = geometries
+    func updateShift(_ shift: ShiftState) {
+        guard state.shift != shift else { return }
+        state.shift = shift
+        updateLetterCase()
     }
 
     private func updateLetterCase() {
         guard state.mode == .letters else { return }
         let uppercase = state.shift != .off
-        for key in keyControls {
-            switch key.action {
-            case .character(let value) where value.count == 1 && value.first?.isLetter == true:
-                key.setCharacter(uppercase ? value.uppercased() : value.lowercased())
-            case .shift:
-                key.setSymbol(uppercase ? "shift.fill" : "shift")
-            default:
-                break
-            }
+        for key in letterKeyControls {
+            guard case .character(let value) = key.action else { continue }
+            key.setCharacter(uppercase ? value.uppercased() : value.lowercased())
         }
+        shiftKeyControl?.setSymbol(uppercase ? "shift.fill" : "shift")
     }
 
     private func configurePopup(for key: KeyboardKeyControl) {
@@ -322,8 +287,8 @@ final class QwertyKeyboardView: UIView {
         switch content {
         case .hidden:
             candidates = []
-        case .predictions(let values), .swipeAlternatives(let values):
-            candidates = Array(values.prefix(3))
+        case .predictions(let values):
+            candidates = values
         }
         candidateBarContent = content
         let font = UIFont.systemFont(
@@ -332,13 +297,19 @@ final class QwertyKeyboardView: UIView {
         )
         for (index, button) in candidateButtons.enumerated() {
             let candidate = index < candidates.count ? candidates[index] : nil
-            button.isHidden = candidate == nil
-            button.setTitle(candidate, for: .normal)
-            button.titleLabel?.font = font
-            button.setTitleColor(theme.textColor.uiColor, for: .normal)
-            button.backgroundColor = theme.suggestionBarColor.uiColor
+            let shouldHide = candidate == nil
+            if button.isHidden != shouldHide { button.isHidden = shouldHide }
+            if button.title(for: .normal) != candidate { button.setTitle(candidate, for: .normal) }
+            if button.titleLabel?.font != font { button.titleLabel?.font = font }
+            let textColor = theme.textColor.uiColor
+            if button.titleColor(for: .normal) != textColor {
+                button.setTitleColor(textColor, for: .normal)
+            }
+            let backgroundColor = theme.suggestionBarColor.uiColor
+            if button.backgroundColor != backgroundColor { button.backgroundColor = backgroundColor }
         }
-        suggestionStack.isHidden = candidates.isEmpty
+        let shouldHideStack = candidates.isEmpty
+        if suggestionStack.isHidden != shouldHideStack { suggestionStack.isHidden = shouldHideStack }
     }
 
     @objc private func candidateTapped(_ sender: UIButton) {
@@ -346,8 +317,6 @@ final class QwertyKeyboardView: UIView {
         switch candidateBarContent {
         case .predictions:
             delegate?.qwertyKeyboardView(self, didTrigger: .predictionSelected(candidate))
-        case .swipeAlternatives:
-            delegate?.qwertyKeyboardView(self, didTrigger: .swipeAlternative(candidate))
         case .hidden:
             break
         }
@@ -378,14 +347,6 @@ final class QwertyKeyboardView: UIView {
                 homeRowView.transform = .identity
                 homeRowView.alpha = 1
             }
-        }
-    }
-
-    @objc private func swipeGestureChanged(_ recognizer: SwipeTypingGestureRecognizer) {
-        if recognizer.state == .began { keyPopupPresenter.hide() }
-        guard recognizer.state == .ended, let result = recognizer.result else { return }
-        if case .typing(let path) = result {
-            delegate?.qwertyKeyboardView(self, didTrigger: .swipePath(path))
         }
     }
 

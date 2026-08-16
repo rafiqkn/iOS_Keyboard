@@ -100,20 +100,61 @@ final class WordPredictionEngineTests: XCTestCase {
         XCTAssertTrue(engine.predict(for: context).isEmpty)
     }
 
+    func testTrieStoresOnlyTopThreeFrequencyRankedWords() {
+        let dictionary = LocalWordPredictionDictionary(bundle: Bundle(for: Self.self))
+        let words = dictionary.words(withPrefix: "t", limit: 10)
+
+        XCTAssertEqual(words.count, 3)
+        XCTAssertEqual(words.map(\.frequencyRank), words.map(\.frequencyRank).sorted())
+    }
+
     func testPrefixPredictionBenchmark() {
-        let engine = BasicWordPredictionEngine(dictionary: LocalWordPredictionDictionary())
-        let context = PredictionContext(
-            currentWord: "th",
-            previousWord: nil,
-            textBeforeCursor: "th",
-            textAfterCursor: "",
-            replacementCount: 2,
-            shouldCapitalize: false
+        let dictionary = LocalWordPredictionDictionary(bundle: Bundle(for: Self.self))
+
+        measure {
+            for _ in 0..<10_000 {
+                _ = dictionary.words(withPrefix: "th", limit: 3)
+            }
+        }
+    }
+}
+
+@MainActor
+final class TapTypingPerformanceTests: XCTestCase {
+    func testCharacterInsertionBenchmark() {
+        let proxy = BenchmarkTextProxy()
+
+        measure {
+            for _ in 0..<10_000 {
+                proxy.insertText("a")
+            }
+            proxy.reset()
+        }
+    }
+
+    func testBackspaceBenchmark() {
+        let proxy = BenchmarkTextProxy()
+
+        measure {
+            proxy.reset(to: String(repeating: "a", count: 10_000))
+            for _ in 0..<10_000 {
+                proxy.deleteBackward()
+            }
+        }
+    }
+
+    func testCandidateUpdateBenchmark() {
+        let view = QwertyKeyboardView(frame: CGRect(x: 0, y: 0, width: 390, height: 300))
+        view.update(
+            state: KeyboardState(),
+            theme: .light,
+            size: view.bounds.size,
+            returnKeyTitle: "return"
         )
 
         measure {
-            for _ in 0..<1_000 {
-                _ = engine.predict(for: context)
+            for index in 0..<1_000 {
+                view.showCandidates(.predictions(["the", "this", index.isMultiple(of: 2) ? "that" : "there"]))
             }
         }
     }
@@ -133,87 +174,19 @@ private struct FakePredictionDictionary: WordPredictionDictionaryProviding {
     }
 }
 
-final class SwipeTypingEngineTests: XCTestCase {
-    func testCandidateGeneratorMatchesOrderedPathSequence() {
-        let dictionary = FakeSwipeDictionary(words: [
-            DictionaryWord(word: "hello", frequencyRank: 1),
-            DictionaryWord(word: "help", frequencyRank: 2),
-            DictionaryWord(word: "world", frequencyRank: 3)
-        ])
-        let path = makePath(sequence: "helo")
-        let generator = BasicSwipeCandidateGenerator(dictionary: dictionary)
+private final class BenchmarkTextProxy {
+    private var storage = ""
 
-        let candidates = generator.candidates(for: path)
-
-        XCTAssertEqual(candidates.map(\.word), ["hello"])
+    func insertText(_ text: String) {
+        storage.append(contentsOf: text)
     }
 
-    func testRankerPrefersGeometricallyCloserCandidate() {
-        let dictionary = FakeSwipeDictionary(words: [
-            DictionaryWord(word: "hello", frequencyRank: 100),
-            DictionaryWord(word: "help", frequencyRank: 1)
-        ])
-        let path = makePath(sequence: "helo")
-        let ranker = BasicSwipeCandidateRanker()
-
-        let ranked = ranker.rank(dictionary.allWords, for: path)
-
-        XCTAssertEqual(ranked.first?.word, "hello")
+    func deleteBackward() {
+        guard !storage.isEmpty else { return }
+        storage.removeLast()
     }
 
-    func testEngineRejectsEmptyPath() {
-        let dictionary = FakeSwipeDictionary(words: [])
-        let engine = SwipeTypingEngine(
-            generator: BasicSwipeCandidateGenerator(dictionary: dictionary),
-            ranker: BasicSwipeCandidateRanker()
-        )
-        XCTAssertNil(engine.recognize(path: SwipePath(points: [], keyGeometries: [:])))
-    }
-
-    func testDictionaryWordSignatureCollapsesRepeatedLetters() {
-        let word = DictionaryWord(word: "letter", frequencyRank: 1)
-        XCTAssertEqual(word.signature, Array("leter"))
-    }
-
-    func testSwipeRecognitionBenchmark() {
-        let dictionary = FakeSwipeDictionary(words: (0..<300).map { index in
-            DictionaryWord(word: "hello\(index)", frequencyRank: index)
-        })
-        let path = makePath(sequence: "helo")
-        let ranker = BasicSwipeCandidateRanker()
-
-        measure {
-            for _ in 0..<100 {
-                _ = ranker.rank(dictionary.allWords, for: path)
-            }
-        }
-    }
-
-    private func makePath(sequence: String) -> SwipePath {
-        var geometries: [Character: SwipeKeyGeometry] = [:]
-        let letters = Array("abcdefghijklmnopqrstuvwxyz")
-        for (index, letter) in letters.enumerated() {
-            let frame = CGRect(x: CGFloat(index % 10) * 40, y: CGFloat(index / 10) * 50, width: 36, height: 44)
-            geometries[letter] = SwipeKeyGeometry(letter: letter, frame: frame)
-        }
-        let points = Array(sequence).enumerated().compactMap { index, letter -> SwipePathPoint? in
-            guard let geometry = geometries[letter] else { return nil }
-            return SwipePathPoint(
-                position: geometry.center,
-                timestamp: Double(index) * 0.05,
-                letter: letter
-            )
-        }
-        return SwipePath(points: points, keyGeometries: geometries)
-    }
-}
-
-private struct FakeSwipeDictionary: SwipeDictionaryProviding {
-    let allWords: [DictionaryWord]
-
-    init(words: [DictionaryWord]) { allWords = words }
-
-    func words(startingWith first: Character, endingWith last: Character) -> [DictionaryWord] {
-        allWords.filter { $0.word.first == first && $0.word.last == last }
+    func reset(to value: String = "") {
+        storage = value
     }
 }

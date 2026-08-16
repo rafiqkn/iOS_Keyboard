@@ -24,6 +24,16 @@ protocol WordPredicting {
     func predict(for context: PredictionContext) -> [WordPrediction]
 }
 
+struct DictionaryWord: Equatable {
+    let word: String
+    let frequencyRank: Int
+
+    init(word: String, frequencyRank: Int) {
+        self.word = word
+        self.frequencyRank = frequencyRank
+    }
+}
+
 protocol WordPredictionDictionaryProviding {
     func words(withPrefix prefix: String, limit: Int) -> [DictionaryWord]
     func nextWords(after previousWord: String, limit: Int) -> [DictionaryWord]

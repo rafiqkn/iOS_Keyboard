@@ -3,7 +3,7 @@ import UIKit
 
 final class BundledDictionaryTests: XCTestCase {
     func testBundledLexiconIsPresentAndSubstantial() throws {
-        let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "english_swipe_words", withExtension: "txt"))
+        let url = try XCTUnwrap(Bundle(for: Self.self).url(forResource: "english_prediction_words", withExtension: "txt"))
         let contents = try String(contentsOf: url, encoding: .utf8)
         let words = contents.split(whereSeparator: \.isNewline).map(String.init)
 
@@ -11,14 +11,6 @@ final class BundledDictionaryTests: XCTestCase {
         XCTAssertTrue(words.contains("hello"))
         XCTAssertTrue(words.contains("keyboard"))
         XCTAssertTrue(words.contains("world"))
-    }
-
-    func testLocalSwipeDictionaryUsesFirstAndLastLetterIndex() {
-        let dictionary = LocalSwipeDictionary(bundle: Bundle(for: Self.self))
-        let words = dictionary.words(startingWith: "h", endingWith: "o").map(\.word)
-
-        XCTAssertTrue(words.contains("hello"))
-        XCTAssertTrue(words.allSatisfy { $0.first == "h" && $0.last == "o" })
     }
 
     func testLocalPredictionDictionarySupportsPrefixesAndBigrams() {

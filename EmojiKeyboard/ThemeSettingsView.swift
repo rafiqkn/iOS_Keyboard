@@ -366,7 +366,7 @@ struct ThemeSettingsView: View {
 
     private func colorBinding(_ keyPath: WritableKeyPath<KeyboardTheme, ThemeColor>) -> Binding<Color> {
         Binding(
-            get: { Color(uiColor: model.theme[keyPath: keyPath].uiColor) },
+            get: { Color(uiColor: model.theme[keyPath: keyPath].editorUIColor) },
             set: { model.theme[keyPath: keyPath] = ThemeColor(uiColor: UIColor($0)) }
         )
     }
@@ -715,11 +715,11 @@ private extension ThemeColor {
         self.init(red: red, green: green, blue: blue, alpha: alpha)
     }
 
-    var uiColor: UIColor {
+    fileprivate var editorUIColor: UIColor {
         UIColor(red: red, green: green, blue: blue, alpha: alpha)
     }
 
-    var color: Color { Color(uiColor: uiColor) }
+    var color: Color { Color(uiColor: editorUIColor) }
 }
 
 private extension UIColor {

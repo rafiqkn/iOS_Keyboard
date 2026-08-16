@@ -7,9 +7,7 @@ A native, offline custom iOS keyboard with a lightweight QWERTY layout and emoji
 - Standard QWERTY layout with a permanent number row
 - Independent home-row left-swipe deletion with configurable character and word thresholds
 - Optional home-row deletion feedback animation, disabled by default and controlled in the app
-- Basic swipe typing with local English dictionary matching and confidence ranking
-- Swipe candidate overlay for correcting the most recent gesture word
-- Three local word-prediction candidates using the current word and previous-word context
+- Three local word-prediction candidates using a Trie-backed English lexicon and previous-word context
 - Safe partial-word replacement when a prediction is selected
 - Optional key popups and system keystroke sound controls
 - Theme settings with Automatic, Light, Dark, and Custom modes
@@ -44,11 +42,11 @@ A native, offline custom iOS keyboard with a lightweight QWERTY layout and emoji
 7. Open a text field and use the globe key to switch to KnKeys.
 8. Use the face button to open emoji mode and the keyboard button to return to QWERTY.
 
-The keyboard layout does not include an internal globe key. Switch keyboards using the input-mode controls provided by iOS. Swipe typing uses a bundled common-English seed lexicon; its dictionary provider is modular so a larger licensed corpus can replace it without changing gesture or ranking code.
+The keyboard layout does not include an internal globe key. Switch keyboards using the input-mode controls provided by iOS. Word prediction uses a bundled common-English seed lexicon and remains fully offline.
 
 Full Access is not required. The extension inserts local Unicode text and does not use the network or pasteboard.
 
-Theme and interaction settings are available from the host app under **Themes** and are shared with the keyboard through the KnKeys App Group. The suggestion-bar color styles the swipe candidate overlay.
+Theme and interaction settings are available from the host app under **Themes** and are shared with the keyboard through the KnKeys App Group. The suggestion-bar color styles word predictions.
 
 ## Project Structure
 
@@ -61,11 +59,8 @@ Theme and interaction settings are available from the host app under **Themes** 
 - `EmojiKeyboardExtension/KeyboardLayout.swift`: data-driven QWERTY, number, and symbol rows
 - `EmojiKeyboardExtension/QwertyKeyboardView.swift`: responsive QWERTY view
 - `EmojiKeyboardExtension/GestureDeletion.swift`: Unicode-aware deletion planning and thresholds
-- `EmojiKeyboardExtension/SwipeTypingGestureRecognizer.swift`: tap, deletion, and swipe intent arbitration
-- `EmojiKeyboardExtension/SwipeTypingEngine.swift`: candidate generation, geometry scoring, and ranking
-- `EmojiKeyboardExtension/SwipeDictionary.swift`: indexed local dictionary provider
 - `EmojiKeyboardExtension/WordPredictionModels.swift`: Unicode-aware context parsing and prediction contracts
-- `EmojiKeyboardExtension/WordPredictionEngine.swift`: independent prefix and previous-word prediction engine
+- `EmojiKeyboardExtension/WordPredictionEngine.swift`: Trie-backed prefix and previous-word prediction engine
 - `EmojiKeyboardExtension/KeyPopupPresenter.swift`: reusable key popup presentation
 - `EmojiKeyboardExtension/KeyboardFeedbackManager.swift`: centralized keystroke sound policy
 - `EmojiKeyboardExtension/EmojiKeyboardView.swift`: existing emoji grid view
@@ -86,7 +81,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
   CODE_SIGNING_ALLOWED=NO
 ```
 
-The `KnKeysTests` target covers theme validation and App Group settings migration, keyboard layouts and metrics, emoji catalog integrity, deletion planning, swipe candidate generation and ranking, word prediction context and ranking, dictionary resources, key controls, emoji rendering, popup presentation, and the height policies that prevent portrait/emoji shrinking. XCTest does not replace physical-device checks for UIKit keyboard touch arbitration, `textDocumentProxy`, system keyboard sound behavior, or iOS keyboard registration.
+The `KnKeysTests` target covers theme validation and App Group settings migration, keyboard layouts and metrics, emoji catalog integrity, deletion planning, word prediction context and Trie lookup, dictionary resources, key controls, candidate reuse, emoji rendering, popup presentation, tap-path performance baselines, and the height policies that prevent portrait/emoji shrinking. XCTest does not replace physical-device checks for UIKit keyboard input, `textDocumentProxy`, system keyboard sound behavior, or iOS keyboard registration.
 
 ## Command-Line Build
 
