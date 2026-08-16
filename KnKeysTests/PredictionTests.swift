@@ -117,6 +117,25 @@ final class WordPredictionEngineTests: XCTestCase {
             }
         }
     }
+
+    func testTrieRanksOutOfOrderInput() {
+        let dictionary = LocalWordPredictionDictionary(words: [
+            DictionaryWord(word: "hello", frequencyRank: 30),
+            DictionaryWord(word: "help", frequencyRank: 10),
+            DictionaryWord(word: "helicopter", frequencyRank: 20),
+            DictionaryWord(word: "hero", frequencyRank: 5)
+        ])
+        let predictions = BasicWordPredictionEngine(dictionary: dictionary).predict(for: PredictionContext(
+            currentWord: "he",
+            previousWord: nil,
+            textBeforeCursor: "he",
+            textAfterCursor: "",
+            replacementCount: 2,
+            shouldCapitalize: false
+        ))
+
+        XCTAssertEqual(predictions.map(\.word), ["hero", "help", "helicopter"])
+    }
 }
 
 @MainActor
@@ -155,6 +174,27 @@ final class TapTypingPerformanceTests: XCTestCase {
         measure {
             for index in 0..<1_000 {
                 view.showCandidates(.predictions(["the", "this", index.isMultiple(of: 2) ? "that" : "there"]))
+            }
+        }
+    }
+
+    func testKeyHighlightWithShadowBenchmark() {
+        let key = KeyboardKeyControl(descriptor: KeyboardKeyDescriptor(.character("a"), title: "a"))
+        measure {
+            for _ in 0..<10_000 {
+                key.isHighlighted = true
+                key.isHighlighted = false
+            }
+        }
+    }
+
+    func testKeyHighlightWithoutShadowComparisonBenchmark() {
+        let key = KeyboardKeyControl(descriptor: KeyboardKeyDescriptor(.character("a"), title: "a"))
+        key.layer.shadowOpacity = 0
+        measure {
+            for _ in 0..<10_000 {
+                key.isHighlighted = true
+                key.isHighlighted = false
             }
         }
     }

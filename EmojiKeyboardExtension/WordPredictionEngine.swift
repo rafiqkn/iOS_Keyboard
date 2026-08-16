@@ -39,14 +39,24 @@ final class LocalWordPredictionDictionary: WordPredictionDictionaryProviding {
         }
 
         var seen = Set<String>()
-        for (rank, line) in contents.split(whereSeparator: \.isNewline).enumerated() {
+        let words = contents.split(whereSeparator: \.isNewline).enumerated().compactMap { rank, line -> DictionaryWord? in
             let word = line.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             guard word.count >= 2,
                   word.allSatisfy({ $0.isLetter }),
-                  seen.insert(word).inserted else { continue }
-            let dictionaryWord = DictionaryWord(word: word, frequencyRank: rank)
-            wordsByValue[word] = dictionaryWord
-            insert(dictionaryWord)
+                  seen.insert(word).inserted else { return nil }
+            return DictionaryWord(word: word, frequencyRank: rank)
+        }
+        insert(words: words)
+    }
+
+    init(words: [DictionaryWord]) {
+        insert(words: words)
+    }
+
+    private func insert(words: [DictionaryWord]) {
+        for word in words {
+            wordsByValue[word.word] = word
+            insert(word)
         }
     }
 
@@ -77,8 +87,14 @@ final class LocalWordPredictionDictionary: WordPredictionDictionaryProviding {
                 node.children[character] = child
             }
             node = child
-            if node.topWords.count < 3 {
-                node.topWords.append(word)
+            let insertionIndex = node.topWords.firstIndex {
+                $0.frequencyRank > word.frequencyRank
+            } ?? node.topWords.count
+            if insertionIndex < 3 || node.topWords.count < 3 {
+                node.topWords.insert(word, at: insertionIndex)
+                if node.topWords.count > 3 {
+                    node.topWords.removeLast()
+                }
             }
         }
     }

@@ -76,8 +76,10 @@ final class KeyboardViewController: UIInputViewController {
         if themeChanged {
             updateHeight()
         }
-        updateAutomaticShiftIfNeeded()
-        schedulePredictions()
+        let contextBefore = textDocumentProxy.documentContextBeforeInput
+        let contextAfter = textDocumentProxy.documentContextAfterInput
+        updateAutomaticShiftIfNeeded(contextBefore: contextBefore)
+        schedulePredictions(before: contextBefore, after: contextAfter)
     }
 
     private func installKeyboardView(_ keyboardView: UIView) {
@@ -113,7 +115,10 @@ final class KeyboardViewController: UIInputViewController {
         } else {
             installKeyboardView(qwertyView)
             if mode == .letters {
-                updateAutomaticShiftIfNeeded(force: true)
+                updateAutomaticShiftIfNeeded(
+                    force: true,
+                    contextBefore: textDocumentProxy.documentContextBeforeInput
+                )
             }
         }
         updateAppearanceAndLayout()
@@ -206,13 +211,11 @@ final class KeyboardViewController: UIInputViewController {
         qwertyView.showCandidates(.hidden)
     }
 
-    private func schedulePredictions() {
+    private func schedulePredictions(before: String?, after: String?) {
         guard state.mode == .letters else {
             invalidatePredictions()
             return
         }
-        let before = textDocumentProxy.documentContextBeforeInput
-        let after = textDocumentProxy.documentContextAfterInput
         guard before != lastPredictionContextBefore || after != lastPredictionContextAfter else { return }
         lastPredictionContextBefore = before
         lastPredictionContextAfter = after
@@ -325,9 +328,12 @@ final class KeyboardViewController: UIInputViewController {
         qwertyView.updateShift(state.shift)
     }
 
-    private func updateAutomaticShiftIfNeeded(force: Bool = false) {
+    private func updateAutomaticShiftIfNeeded(
+        force: Bool = false,
+        contextBefore: String?
+    ) {
         guard state.mode == .letters, state.shift != .capsLock else { return }
-        let shouldShift = shouldAutomaticallyCapitalize()
+        let shouldShift = shouldAutomaticallyCapitalize(contextBefore: contextBefore)
         if force || !didSetInitialShiftState || state.shift != (shouldShift ? .on : .off) {
             state.shift = shouldShift ? .on : .off
             didSetInitialShiftState = true
@@ -335,17 +341,17 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
-    private func shouldAutomaticallyCapitalize() -> Bool {
+    private func shouldAutomaticallyCapitalize(contextBefore context: String?) -> Bool {
         switch textDocumentProxy.autocapitalizationType ?? .sentences {
         case .none:
             return false
         case .allCharacters:
             return true
         case .words:
-            guard let context = textDocumentProxy.documentContextBeforeInput else { return true }
+            guard let context else { return true }
             return context.isEmpty || context.last?.isWhitespace == true
         case .sentences:
-            guard let context = textDocumentProxy.documentContextBeforeInput else { return true }
+            guard let context else { return true }
             let trimmed = context.trimmingCharacters(in: .whitespacesAndNewlines)
             guard let last = trimmed.last else { return true }
             return ".!?".contains(last)

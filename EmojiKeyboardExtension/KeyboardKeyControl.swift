@@ -11,6 +11,10 @@ final class KeyboardKeyControl: UIControl {
     private let imageView = UIImageView()
     private let keyStyle: KeyboardKeyStyle
     private var theme = KeyboardTheme.light
+    private var normalForegroundColor = UIColor.label
+    private var normalBackgroundColor = UIColor.systemBackground
+    private var highlightedBackgroundColor = UIColor.systemBackground
+    private var selectedBackgroundColor = UIColor.systemBlue
 
     init(descriptor: KeyboardKeyDescriptor) {
         action = descriptor.action
@@ -64,7 +68,10 @@ final class KeyboardKeyControl: UIControl {
     }
 
     override var isHighlighted: Bool {
-        didSet { applyColors() }
+        didSet {
+            guard oldValue != isHighlighted else { return }
+            applyBackgroundColor()
+        }
     }
 
     func setTitle(_ title: String) {
@@ -109,27 +116,38 @@ final class KeyboardKeyControl: UIControl {
 
     private func applyColors(selected: Bool? = nil) {
         let isSelected = selected ?? accessibilityTraits.contains(.selected)
-        let foreground = theme.textColor.uiColor
-        titleLabel.textColor = foreground
-        imageView.tintColor = foreground
+        normalForegroundColor = theme.textColor.uiColor
+        normalBackgroundColor = keyBackgroundColor
+        highlightedBackgroundColor = theme.keyBackground.uiColor.withAlphaComponent(0.72)
+        selectedBackgroundColor = theme.accentKeyBackground.uiColor
+        titleLabel.textColor = normalForegroundColor
+        imageView.tintColor = normalForegroundColor
+        applyBackgroundColor(isSelected: isSelected)
+    }
 
+    private var keyBackgroundColor: UIColor {
+        switch keyStyle {
+        case .character, .space:
+            return theme.keyBackground.uiColor
+        case .function:
+            return theme.functionKeyBackground.uiColor
+        case .accent:
+            return theme.accentKeyBackground.uiColor
+        case .spacer:
+            return .clear
+        }
+    }
+
+    private func applyBackgroundColor(isSelected: Bool? = nil) {
+        let selected = isSelected ?? accessibilityTraits.contains(.selected)
         if keyStyle == .spacer {
             backgroundColor = .clear
         } else if isHighlighted {
-            backgroundColor = theme.keyBackground.uiColor.withAlphaComponent(0.72)
-        } else if isSelected {
-            backgroundColor = theme.accentKeyBackground.uiColor
+            backgroundColor = highlightedBackgroundColor
+        } else if selected {
+            backgroundColor = selectedBackgroundColor
         } else {
-            switch keyStyle {
-            case .character, .space:
-                backgroundColor = theme.keyBackground.uiColor
-            case .function:
-                backgroundColor = theme.functionKeyBackground.uiColor
-            case .accent:
-                backgroundColor = theme.accentKeyBackground.uiColor
-            case .spacer:
-                backgroundColor = .clear
-            }
+            backgroundColor = normalBackgroundColor
         }
     }
 }
