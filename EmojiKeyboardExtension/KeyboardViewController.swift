@@ -280,7 +280,12 @@ final class KeyboardViewController: UIInputViewController {
         guard let record = latestPrediction,
               record.generation == predictionGeneration else { return }
         let currentContext = textDocumentProxy.documentContextBeforeInput ?? ""
-        guard currentContext.lowercased().hasSuffix(record.expectedSuffix.lowercased()) else {
+        // The tapped suggestion is only valid if the word under the cursor is
+        // still exactly the word it was built from. A plain hasSuffix check
+        // would wrongly accept "help".hasSuffix("hel") and then delete the
+        // wrong number of characters.
+        let currentWord = TextContextParser.parse(before: currentContext, after: nil)?.currentWord ?? ""
+        guard currentWord == record.expectedSuffix else {
             latestPrediction = nil
             qwertyView.showCandidates(.hidden)
             return

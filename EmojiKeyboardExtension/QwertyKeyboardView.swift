@@ -308,6 +308,16 @@ final class QwertyKeyboardView: UIView {
         candidateBarContent != .hidden
     }
 
+    /// The candidate words currently presented in the bar (empty when hidden).
+    var visibleCandidateTitles: [String] {
+        switch candidateBarContent {
+        case .hidden:
+            return []
+        case .predictions(let values):
+            return values
+        }
+    }
+
     /// Whether the candidate bar is actually drawn on screen (not just
     /// logically populated). Used to keep mode switches from flashing an
     /// empty bar.
