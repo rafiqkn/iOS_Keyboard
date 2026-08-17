@@ -13,6 +13,8 @@ enum KeyboardLayout {
             return []
         case .clipboard:
             return []
+        case .settings:
+            return []
         }
     }
 

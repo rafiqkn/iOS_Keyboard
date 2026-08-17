@@ -6,6 +6,7 @@ enum KeyboardMode: Equatable {
     case symbols
     case emoji
     case clipboard
+    case settings
 }
 
 enum ShiftState: Equatable {

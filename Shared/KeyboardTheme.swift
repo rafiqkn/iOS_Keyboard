@@ -167,6 +167,15 @@ final class ThemeStore {
         return settings
     }
 
+    /// Persists only the interaction settings (used by the in-keyboard
+    /// settings panel) and bumps the revision so the other side reloads.
+    func saveInteractionSettings(_ settings: KeyboardInteractionSettings) {
+        if let data = try? encoder.encode(settings) {
+            defaults.set(data, forKey: ThemeStoreKeys.interactionSettings)
+        }
+        defaults.set(revision + 1, forKey: ThemeStoreKeys.revision)
+    }
+
     func loadCustomTheme() -> KeyboardTheme {
         guard let data = defaults.data(forKey: ThemeStoreKeys.customTheme),
               let theme = try? decoder.decode(KeyboardTheme.self, from: data) else {

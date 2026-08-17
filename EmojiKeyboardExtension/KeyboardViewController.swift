@@ -23,6 +23,12 @@ final class KeyboardViewController: UIInputViewController {
         view.delegate = self
         return view
     }()
+    private lazy var settingsView: SettingsKeyboardView = {
+        let view = SettingsKeyboardView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.delegate = self
+        return view
+    }()
 
     private var state = KeyboardState()
     private var heightConstraint: NSLayoutConstraint?
@@ -51,6 +57,7 @@ final class KeyboardViewController: UIInputViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        ClipboardPasteboardSync.sweep()
         updateHeight()
         updateAppearanceAndLayout()
     }
@@ -74,6 +81,9 @@ final class KeyboardViewController: UIInputViewController {
 
     override func textDidChange(_ textInput: UITextInput?) {
         super.textDidChange(textInput)
+        // Cheap changeCount probe: folds in a fresh copy even when the
+        // keyboard stayed up (e.g. switching fields). No timers/background use.
+        ClipboardPasteboardSync.sweep()
         let themeChanged = themeManager.reloadIfNeeded(for: textDocumentProxy.keyboardAppearance ?? .default)
         if themeChanged {
             updateHeight()
@@ -93,7 +103,7 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func installKeyboardView(_ keyboardView: UIView) {
-        for subview in view.subviews where subview === qwertyView || subview === emojiView || subview === clipboardView {
+        for subview in view.subviews where subview === qwertyView || subview === emojiView || subview === clipboardView || subview === settingsView {
             subview.removeFromSuperview()
         }
         view.addSubview(keyboardView)
@@ -123,8 +133,11 @@ final class KeyboardViewController: UIInputViewController {
             installKeyboardView(emojiView)
         case .clipboard:
             installKeyboardView(clipboardView)
-            captureCurrentClipboardIfNeeded()
+            ClipboardPasteboardSync.sweep()
             clipboardView.reloadHistory()
+        case .settings:
+            installKeyboardView(settingsView)
+            settingsView.configure(settings: themeManager.interactionSettings)
         default:
             installKeyboardView(qwertyView)
             if mode == .letters {
@@ -138,15 +151,24 @@ final class KeyboardViewController: UIInputViewController {
         updateAppearanceAndLayout()
     }
 
-    /// Reads the system pasteboard once, while the user is actively opening
-    /// the clipboard panel. No timers or background monitoring are used, and
-    /// the read is skipped entirely when the keyboard has no pasteboard
-    /// access (no Full Access).
-    private func captureCurrentClipboardIfNeeded() {
-        guard let string = UIPasteboard.general.string, !string.isEmpty else { return }
-        let store = ClipboardHistoryStore()
-        guard store.load().first?.text != string else { return }
-        store.add(string)
+    /// Applies interaction-setting changes made in the in-keyboard panel so
+    /// they take effect immediately instead of waiting for the next reload.
+    private func applyInteractionSettings(_ settings: KeyboardInteractionSettings) {
+        let old = themeManager.interactionSettings
+        themeManager.updateInteractionSettings(settings)
+        qwertyView.updateDeletionFeedbackAnimation(
+            enabled: themeManager.deletionFeedbackAnimationEnabled
+        )
+        qwertyView.updateKeyPopup(enabled: settings.keyPopupEnabled)
+        feedbackManager.soundMode = settings.keystrokeSoundMode
+        if old.predictionEnabled == settings.predictionEnabled {
+            return
+        }
+        if settings.predictionEnabled {
+            schedulePredictions(before: textDocumentProxy.documentContextBeforeInput)
+        } else {
+            disablePredictionsIfNeeded()
+        }
     }
 
     private func updateHeight() {
@@ -187,6 +209,8 @@ final class KeyboardViewController: UIInputViewController {
             emojiView.updateAppearance(theme: theme)
         } else if state.mode == .clipboard {
             clipboardView.updateAppearance(theme: theme)
+        } else if state.mode == .settings {
+            settingsView.updateAppearance(theme: theme)
         }
     }
 
@@ -231,7 +255,7 @@ final class KeyboardViewController: UIInputViewController {
         case .mode(let mode):
             setMode(mode)
         case .settings:
-            openHostAppSettings()
+            setMode(.settings)
         case .clipboard:
             setMode(.clipboard)
         case .gestureDelete(let level):
@@ -472,14 +496,6 @@ final class KeyboardViewController: UIInputViewController {
     private func playInputClick() {
         feedbackManager.playKeyClick()
     }
-
-    /// Best-effort hand-off to the host app's settings. Requires the "knkeys"
-    /// URL scheme registered by the container app; fails silently when the
-    /// system forbids extension URL opens (e.g. no Full Access).
-    private func openHostAppSettings() {
-        guard let url = URL(string: "knkeys://") else { return }
-        extensionContext?.open(url) { _ in }
-    }
 }
 
 extension KeyboardViewController: UIInputViewAudioFeedback {
@@ -511,5 +527,19 @@ extension KeyboardViewController: ClipboardKeyboardViewDelegate {
 
     func clipboardKeyboardViewRequestedTextKeyboard(_ view: ClipboardKeyboardView) {
         setMode(state.previousTextMode == .clipboard ? .letters : state.previousTextMode)
+    }
+}
+
+extension KeyboardViewController: SettingsKeyboardViewDelegate {
+    func settingsKeyboardView(_ view: SettingsKeyboardView, didTrigger action: KeyboardKeyAction) {
+        handle(action)
+    }
+
+    func settingsKeyboardViewRequestedTextKeyboard(_ view: SettingsKeyboardView) {
+        setMode(state.previousTextMode == .settings ? .letters : state.previousTextMode)
+    }
+
+    func settingsKeyboardView(_ view: SettingsKeyboardView, didChange settings: KeyboardInteractionSettings) {
+        applyInteractionSettings(settings)
     }
 }

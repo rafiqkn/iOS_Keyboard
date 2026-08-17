@@ -96,4 +96,14 @@ final class UIKitComponentSmokeTests: XCTestCase {
         XCTAssertFalse(view.hasAmbiguousLayout)
         XCTAssertTrue(view.suggestionBarIsVisible)
     }
+
+    func testSettingsKeyboardViewRendersTogglesWithoutAmbiguousLayout() {
+        let view = SettingsKeyboardView(frame: CGRect(x: 0, y: 0, width: 390, height: 294))
+        view.configure(settings: .defaults)
+        view.updateAppearance(theme: .dark)
+        view.layoutIfNeeded()
+
+        XCTAssertEqual(view.backgroundColor, KeyboardTheme.dark.keyboardBackground.uiColor)
+        XCTAssertFalse(view.hasAmbiguousLayout)
+    }
 }

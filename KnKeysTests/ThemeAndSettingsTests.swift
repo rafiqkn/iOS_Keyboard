@@ -58,7 +58,6 @@ final class ThemeAndSettingsTests: XCTestCase {
             keyPopupEnabled: false,
             keystrokeSoundMode: .off
         )
-
         XCTAssertEqual(store.loadSelection(), .custom)
         XCTAssertEqual(store.loadCustomTheme().keyHeight, 50)
         XCTAssertEqual(
@@ -131,5 +130,35 @@ final class ThemeAndSettingsTests: XCTestCase {
         let decoded = try JSONDecoder().decode(KeyboardInteractionSettings.self, from: data)
 
         XCTAssertEqual(decoded, settings)
+    }
+
+    func testSaveInteractionSettingsBumpsRevisionAndPersists() {
+        let store = ThemeStore(defaults: defaults)
+        let updated = KeyboardInteractionSettings(
+            deletionFeedbackAnimation: true,
+            keyPopupEnabled: false,
+            keystrokeSoundMode: .off,
+            predictionEnabled: false
+        )
+
+        store.saveInteractionSettings(updated)
+
+        XCTAssertEqual(store.loadInteractionSettings(), updated)
+        XCTAssertEqual(store.revision, 1)
+    }
+
+    func testThemeManagerUpdateInteractionSettingsAppliesImmediately() {
+        let store = ThemeStore(defaults: defaults)
+        let manager = ThemeManager(store: store)
+        XCTAssertTrue(manager.interactionSettings.predictionEnabled)
+
+        var updated = manager.interactionSettings
+        updated.predictionEnabled = false
+        updated.keystrokeSoundMode = .off
+        manager.updateInteractionSettings(updated)
+
+        XCTAssertFalse(manager.interactionSettings.predictionEnabled)
+        XCTAssertEqual(manager.interactionSettings.keystrokeSoundMode, .off)
+        XCTAssertEqual(store.loadInteractionSettings(), updated, "persisted through the shared App Group store")
     }
 }

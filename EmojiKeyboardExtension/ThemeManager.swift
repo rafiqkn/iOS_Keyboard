@@ -28,6 +28,14 @@ final class ThemeManager {
         self.store = store
     }
 
+    /// Updates the interaction settings (e.g. from the in-keyboard panel),
+    /// persists them through the shared App Group store, and refreshes the
+    /// cached copy so behavior changes apply immediately.
+    func updateInteractionSettings(_ settings: KeyboardInteractionSettings) {
+        store.saveInteractionSettings(settings)
+        interactionSettings = settings
+    }
+
     @discardableResult
     func reloadIfNeeded(for appearance: UIKeyboardAppearance, force: Bool = false) -> Bool {
         let revision = store.revision
