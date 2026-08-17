@@ -48,6 +48,7 @@
 		100000000000000000000022 /* SettingsKeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000028 /* SettingsKeyboardView.swift */; };
 		C1000000000000000000001E /* ClipboardPasteboardSync.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000027 /* ClipboardPasteboardSync.swift */; };
 		C1000000000000000000001F /* SettingsKeyboardView.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000028 /* SettingsKeyboardView.swift */; };
+		C10000000000000000000020 /* ClipboardEndToEndTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2000000000000000000000A /* ClipboardEndToEndTests.swift */; };
 		C10000000000000000000004 /* KeyboardHeightPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000004 /* KeyboardHeightPolicyTests.swift */; };
 		C10000000000000000000005 /* KeyboardTheme.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000016 /* KeyboardTheme.swift */; };
 		C10000000000000000000006 /* KeyboardInteractionSettings.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000020 /* KeyboardInteractionSettings.swift */; };
@@ -128,6 +129,7 @@
 		C20000000000000000000009 /* ClipboardHistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHistoryTests.swift; sourceTree = "<group>"; };
 		200000000000000000000027 /* ClipboardPasteboardSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardPasteboardSync.swift; sourceTree = "<group>"; };
 		200000000000000000000028 /* SettingsKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsKeyboardView.swift; sourceTree = "<group>"; };
+		C2000000000000000000000A /* ClipboardEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardEndToEndTests.swift; sourceTree = "<group>"; };
 		C20000000000000000000004 /* KeyboardHeightPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardHeightPolicyTests.swift; sourceTree = "<group>"; };
 		C20000000000000000000005 /* KnKeysTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KnKeysTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C20000000000000000000006 /* ResourceAndUISmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceAndUISmokeTests.swift; sourceTree = "<group>"; };
@@ -237,6 +239,7 @@
 				C20000000000000000000006 /* ResourceAndUISmokeTests.swift */,
 				C20000000000000000000007 /* ThemeEditorAutoSaveTests.swift */,
 				C20000000000000000000009 /* ClipboardHistoryTests.swift */,
+				C2000000000000000000000A /* ClipboardEndToEndTests.swift */,
 			);
 			path = KnKeysTests;
 			sourceTree = "<group>";
@@ -445,6 +448,7 @@
 				C1000000000000000000001D /* ClipboardHistoryTests.swift in Sources */,
 				C1000000000000000000001E /* ClipboardPasteboardSync.swift in Test Sources */,
 				C1000000000000000000001F /* SettingsKeyboardView.swift in Test Sources */,
+				C10000000000000000000020 /* ClipboardEndToEndTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

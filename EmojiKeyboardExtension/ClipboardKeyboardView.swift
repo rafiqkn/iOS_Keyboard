@@ -13,7 +13,7 @@ protocol ClipboardKeyboardViewDelegate: AnyObject {
 final class ClipboardKeyboardView: UIView {
     weak var delegate: ClipboardKeyboardViewDelegate?
 
-    private let store = ClipboardHistoryStore()
+    private let store: ClipboardHistoryStore
     private var items: [ClipboardItem] = []
     private var controlButtons: [UIButton] = []
     private var theme = KeyboardTheme.light
@@ -36,7 +36,12 @@ final class ClipboardKeyboardView: UIView {
     private let emptyLabel: UILabel = {
         let label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "No copied text yet"
+        label.text = """
+        No copied text yet
+
+        Copy text in any app and it appears here.
+        For automatic capture, enable Settings › General › Keyboard › Keyboards › KnKeys › Allow Full Access.
+        """
         label.textAlignment = .center
         label.font = .systemFont(ofSize: 15)
         label.numberOfLines = 0
@@ -45,6 +50,15 @@ final class ClipboardKeyboardView: UIView {
     }()
 
     override init(frame: CGRect) {
+        self.store = ClipboardHistoryStore()
+        super.init(frame: frame)
+        setupKeyboard()
+    }
+
+    /// Test seam: drives the panel from an isolated store instead of the
+    /// shared App Group container.
+    init(frame: CGRect, store: ClipboardHistoryStore) {
+        self.store = store
         super.init(frame: frame)
         setupKeyboard()
     }
@@ -60,6 +74,19 @@ final class ClipboardKeyboardView: UIView {
         items = store.load()
         emptyLabel.isHidden = !items.isEmpty
         collectionView.reloadData()
+    }
+
+    /// Test seam mirroring a user tap on a history row.
+    func simulateSelection(at index: Int) {
+        collectionView(collectionView, didSelectItemAt: IndexPath(item: index, section: 0))
+    }
+
+    var visibleItemTexts: [String] {
+        items.map(\.text)
+    }
+
+    var isShowingEmptyState: Bool {
+        !emptyLabel.isHidden
     }
 
     func updateAppearance(theme: KeyboardTheme) {

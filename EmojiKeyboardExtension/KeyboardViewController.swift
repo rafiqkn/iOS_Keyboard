@@ -151,6 +151,24 @@ final class KeyboardViewController: UIInputViewController {
         updateAppearanceAndLayout()
     }
 
+    /// One-tap paste from the suggestion bar: refreshes from the system
+    /// pasteboard (a no-op when unreadable), then inserts the newest stored
+    /// record. With nothing stored yet the clipboard panel is opened instead so
+    /// the user sees the current state rather than a silent no-op.
+    private func pasteMostRecentClipboardItem() {
+        ClipboardPasteboardSync.sweep()
+        guard let newest = ClipboardHistoryStore().load().first else {
+            setMode(.clipboard)
+            return
+        }
+        playInputClick()
+        cancelPredictionForTextMutation()
+        textDocumentProxy.insertText(newest.text)
+        pendingInsertionText = nil
+        pendingInsertionRestoreText = nil
+        refreshPredictionsAfterMutation()
+    }
+
     /// Applies interaction-setting changes made in the in-keyboard panel so
     /// they take effect immediately instead of waiting for the next reload.
     private func applyInteractionSettings(_ settings: KeyboardInteractionSettings) {
@@ -258,6 +276,8 @@ final class KeyboardViewController: UIInputViewController {
             setMode(.settings)
         case .clipboard:
             setMode(.clipboard)
+        case .pasteFromClipboard:
+            pasteMostRecentClipboardItem()
         case .gestureDelete(let level):
             cancelPredictionForTextMutation()
             delete(using: level)

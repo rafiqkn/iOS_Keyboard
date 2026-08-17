@@ -25,6 +25,7 @@ final class QwertyKeyboardView: UIView {
     private var candidateBarContent = CandidateBarContent.hidden
     private var candidateButtons: [UIButton] = []
     private var settingsButton: UIButton!
+    private var pasteButton: UIButton!
     private var clipboardButton: UIButton!
     private var candidateHeightConstraint: NSLayoutConstraint!
     private var deleteDelayWorkItem: DispatchWorkItem?
@@ -55,6 +56,8 @@ final class QwertyKeyboardView: UIView {
         }
         settingsButton = makeBarButton(systemName: "gearshape", accessibilityLabel: "Settings")
         settingsButton.addTarget(self, action: #selector(settingsButtonTapped), for: .touchUpInside)
+        pasteButton = makeBarButton(systemName: "arrow.down.to.line", accessibilityLabel: "Paste")
+        pasteButton.addTarget(self, action: #selector(pasteButtonTapped), for: .touchUpInside)
         clipboardButton = makeBarButton(systemName: "doc.on.clipboard", accessibilityLabel: "Clipboard")
         clipboardButton.addTarget(self, action: #selector(clipboardButtonTapped), for: .touchUpInside)
         rowsStack.axis = .vertical
@@ -62,6 +65,7 @@ final class QwertyKeyboardView: UIView {
         addSubview(rowsStack)
         addSubview(suggestionStack)
         addSubview(settingsButton)
+        addSubview(pasteButton)
         addSubview(clipboardButton)
         candidateHeightConstraint = suggestionStack.heightAnchor.constraint(equalToConstant: 34)
         topConstraint = rowsStack.topAnchor.constraint(equalTo: suggestionStack.bottomAnchor, constant: 2)
@@ -75,12 +79,16 @@ final class QwertyKeyboardView: UIView {
             bottomConstraint,
             suggestionStack.topAnchor.constraint(equalTo: topAnchor, constant: 4),
             suggestionStack.leadingAnchor.constraint(equalTo: settingsButton.trailingAnchor, constant: 4),
-            suggestionStack.trailingAnchor.constraint(equalTo: clipboardButton.leadingAnchor, constant: -4),
+            suggestionStack.trailingAnchor.constraint(equalTo: pasteButton.leadingAnchor, constant: -4),
             candidateHeightConstraint,
             settingsButton.topAnchor.constraint(equalTo: topAnchor, constant: 4),
             settingsButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 4),
             settingsButton.widthAnchor.constraint(equalToConstant: 36),
             settingsButton.heightAnchor.constraint(equalToConstant: 34),
+            pasteButton.topAnchor.constraint(equalTo: topAnchor, constant: 4),
+            pasteButton.trailingAnchor.constraint(equalTo: clipboardButton.leadingAnchor, constant: -4),
+            pasteButton.widthAnchor.constraint(equalToConstant: 36),
+            pasteButton.heightAnchor.constraint(equalToConstant: 34),
             clipboardButton.topAnchor.constraint(equalTo: topAnchor, constant: 4),
             clipboardButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4),
             clipboardButton.widthAnchor.constraint(equalToConstant: 36),
@@ -101,14 +109,16 @@ final class QwertyKeyboardView: UIView {
         return button
     }
 
-    /// The ⚙️/📋 bar buttons are part of the suggestion band and only exist in
+    /// The ⚙️/Paste/📋 bar buttons are part of the suggestion band and only exist in
     /// letters mode. They stay visible even when there are no predictions to
     /// show (unlike the prediction stack, which fades with its content).
     private func updateBarVisibility() {
         let visible = state.mode == .letters
         settingsButton.alpha = visible ? 1 : 0
+        pasteButton.alpha = visible ? 1 : 0
         clipboardButton.alpha = visible ? 1 : 0
         settingsButton.isUserInteractionEnabled = visible
+        pasteButton.isUserInteractionEnabled = visible
         clipboardButton.isUserInteractionEnabled = visible
     }
 
@@ -335,6 +345,9 @@ final class QwertyKeyboardView: UIView {
         settingsButton.tintColor = theme.textColor.uiColor
         settingsButton.backgroundColor = theme.functionKeyBackground.uiColor
         settingsButton.layer.cornerRadius = CGFloat(theme.keyCornerRadius)
+        pasteButton.tintColor = theme.textColor.uiColor
+        pasteButton.backgroundColor = theme.functionKeyBackground.uiColor
+        pasteButton.layer.cornerRadius = CGFloat(theme.keyCornerRadius)
         clipboardButton.tintColor = theme.textColor.uiColor
         clipboardButton.backgroundColor = theme.functionKeyBackground.uiColor
         clipboardButton.layer.cornerRadius = CGFloat(theme.keyCornerRadius)
@@ -440,6 +453,10 @@ final class QwertyKeyboardView: UIView {
 
     @objc private func settingsButtonTapped() {
         delegate?.qwertyKeyboardView(self, didTrigger: .settings)
+    }
+
+    @objc private func pasteButtonTapped() {
+        delegate?.qwertyKeyboardView(self, didTrigger: .pasteFromClipboard)
     }
 
     @objc private func clipboardButtonTapped() {

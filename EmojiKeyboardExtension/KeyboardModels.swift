@@ -33,6 +33,7 @@ enum KeyboardKeyAction: Equatable {
     case retractLastInsert
     case settings
     case clipboard
+    case pasteFromClipboard
     case spacer
 }
 
