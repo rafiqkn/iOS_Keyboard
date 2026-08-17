@@ -1,6 +1,6 @@
 # KnKeys for iOS
 
-A native, offline custom iOS keyboard with a lightweight QWERTY layout and emoji mode. It inserts Unicode text without requesting Full Access.
+A native, offline custom iOS keyboard with a lightweight QWERTY layout and emoji mode. It inserts Unicode text and works without Full Access (Full Access is optional, and only enables clipboard capture from other apps).
 
 ## Features
 
@@ -46,9 +46,9 @@ A native, offline custom iOS keyboard with a lightweight QWERTY layout and emoji
 
 The keyboard layout does not include an internal globe key. Switch keyboards using the input-mode controls provided by iOS. Word prediction uses a bundled common-English seed lexicon and remains fully offline.
 
-Full Access is not required. The extension inserts local Unicode text and does not use the network or pasteboard.
+Full Access is optional. Without it the keyboard is fully functional and never touches the pasteboard; the clipboard panel is then populated only while the KnKeys app itself is open. Enabling **Settings › General › Keyboard › Keyboards › KnKeys › Allow Full Access** lets the keyboard capture text you copy in other apps (read at foreground moments only — no timers, no background monitoring, no network).
 
-Theme and interaction settings are available from the host app under **Themes** and are shared with the keyboard through the KnKeys App Group. The suggestion-bar color styles word predictions.
+Theme and interaction settings are available from the host app under **Themes**, and directly on the keyboard via the ⚙️ suggestion-bar button (Word Prediction, Key Popups, Keystroke Sound, Deletion Feedback). Both write to the shared KnKeys App Group. The suggestion bar also has a paste button (inserts the newest clipboard record) and 📋 (full clipboard history, 25 records, FIFO).
 
 ## Project Structure
 
