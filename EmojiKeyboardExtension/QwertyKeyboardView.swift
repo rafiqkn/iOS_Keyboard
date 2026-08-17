@@ -41,7 +41,7 @@ final class QwertyKeyboardView: UIView {
         suggestionStack.axis = .horizontal
         suggestionStack.distribution = .fillEqually
         suggestionStack.spacing = 1
-        suggestionStack.isHidden = true
+        suggestionStack.alpha = 0
         suggestionStack.layer.cornerRadius = 6
         suggestionStack.clipsToBounds = true
         candidateButtons = (0..<3).map { _ in
@@ -107,10 +107,10 @@ final class QwertyKeyboardView: UIView {
 
         if modeChanged {
             candidateHeightConstraint.constant = 34
-            suggestionStack.isHidden = state.mode != .letters
             if state.mode != .letters {
                 candidateBarContent = .hidden
             }
+            applyCandidateVisibility(animated: false)
             rebuildRows()
         } else if shiftChanged {
             updateLetterCase()
@@ -308,7 +308,14 @@ final class QwertyKeyboardView: UIView {
         candidateBarContent != .hidden
     }
 
-    func showCandidates(_ content: CandidateBarContent) {
+    /// Whether the candidate bar is actually drawn on screen (not just
+    /// logically populated). Used to keep mode switches from flashing an
+    /// empty bar.
+    var suggestionBarIsVisible: Bool {
+        !suggestionStack.isHidden && suggestionStack.alpha > 0.5
+    }
+
+    func showCandidates(_ content: CandidateBarContent, animated: Bool = true) {
         guard candidateBarContent != content else { return }
         let candidates: [String]
         switch content {
@@ -335,8 +342,34 @@ final class QwertyKeyboardView: UIView {
             let backgroundColor = theme.suggestionBarColor.uiColor
             if button.backgroundColor != backgroundColor { button.backgroundColor = backgroundColor }
         }
-        let shouldHideStack = candidates.isEmpty
-        if suggestionStack.isHidden != shouldHideStack { suggestionStack.isHidden = shouldHideStack }
+        applyCandidateVisibility(animated: animated)
+    }
+
+    /// Keeps the candidate bar laid out (it always reserves its band) and
+    /// toggles only opacity so show/hide transitions fade instead of popping
+    /// and never cause layout jumps.
+    private func applyCandidateVisibility(animated: Bool) {
+        let shouldHide: Bool
+        switch candidateBarContent {
+        case .hidden:
+            shouldHide = true
+        case .predictions(let values):
+            shouldHide = values.isEmpty
+        }
+        suggestionStack.isUserInteractionEnabled = !shouldHide
+        let targetAlpha: CGFloat = shouldHide ? 0 : 1
+        guard suggestionStack.alpha != targetAlpha else { return }
+        if animated {
+            UIView.animate(
+                withDuration: 0.12,
+                delay: 0,
+                options: [.beginFromCurrentState, .allowUserInteraction]
+            ) { [weak self] in
+                self?.suggestionStack.alpha = targetAlpha
+            }
+        } else {
+            suggestionStack.alpha = targetAlpha
+        }
     }
 
     @objc private func candidateTapped(_ sender: UIButton) {

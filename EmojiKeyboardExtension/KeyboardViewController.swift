@@ -11,10 +11,6 @@ final class KeyboardViewController: UIInputViewController {
     private let themeManager = ThemeManager()
     private let feedbackManager = KeyboardFeedbackManager()
     private lazy var wordPredictionEngine = BasicWordPredictionEngine()
-    private let predictionQueue = DispatchQueue(
-        label: "com.rafiqkn.KnKeys.word-prediction",
-        qos: .userInitiated
-    )
     private lazy var emojiView: EmojiKeyboardView = {
         let view = EmojiKeyboardView()
         view.translatesAutoresizingMaskIntoConstraints = false
@@ -29,7 +25,6 @@ final class KeyboardViewController: UIInputViewController {
     private var lastSpaceTapTime: TimeInterval = 0
     private var didSetInitialShiftState = false
     private var predictionGeneration = 0
-    private var predictionWorkItem: DispatchWorkItem?
     private var latestPrediction: PredictionDisplayRecord?
     private var lastPredictionContextBefore: String?
     private var pendingInsertionText: String?
@@ -108,11 +103,9 @@ final class KeyboardViewController: UIInputViewController {
     private func setMode(_ mode: KeyboardMode) {
         guard state.mode != mode else { return }
         predictionGeneration += 1
-        predictionWorkItem?.cancel()
-        predictionWorkItem = nil
         lastPredictionContextBefore = nil
         latestPrediction = nil
-        qwertyView.showCandidates(.hidden)
+        qwertyView.showCandidates(.hidden, animated: false)
         qwertyView.cancelActiveInteractions()
         if state.mode != .emoji {
             state.previousTextMode = state.mode
@@ -128,6 +121,7 @@ final class KeyboardViewController: UIInputViewController {
                     force: true,
                     contextBefore: textDocumentProxy.documentContextBeforeInput
                 )
+                schedulePredictions(before: textDocumentProxy.documentContextBeforeInput)
             }
         }
         updateAppearanceAndLayout()
@@ -175,10 +169,12 @@ final class KeyboardViewController: UIInputViewController {
     private func handle(_ action: KeyboardKeyAction) {
         switch action {
         case .character(let text):
+            // Invalidate stale suggestions BEFORE the mutation: the insertion's
+            // own textDidChange re-schedules predictions for the new context.
+            cancelPredictionForTextMutation()
             insertText(text)
             pendingInsertionText = text
             pendingInsertionRestoreText = nil
-            cancelPredictionForTextMutation()
             if state.mode == .letters && state.shift == .on {
                 state.shift = .off
                 qwertyView.updateShift(state.shift)
@@ -186,17 +182,17 @@ final class KeyboardViewController: UIInputViewController {
         case .shift:
             updateShiftState()
         case .backspace:
-            textDocumentProxy.deleteBackward()
             cancelPredictionForTextMutation()
+            textDocumentProxy.deleteBackward()
             playInputClick()
         case .space:
-            pendingInsertionText = insertSpace()
             cancelPredictionForTextMutation()
+            pendingInsertionText = insertSpace()
         case .retractLastInsert:
             retractPendingInsertion()
         case .returnKey:
-            insertText("\n")
             cancelPredictionForTextMutation()
+            insertText("\n")
             if state.mode == .letters && state.shift != .capsLock {
                 state.shift = .on
                 qwertyView.updateShift(state.shift)
@@ -206,8 +202,8 @@ final class KeyboardViewController: UIInputViewController {
         case .mode(let mode):
             setMode(mode)
         case .gestureDelete(let level):
-            delete(using: level)
             cancelPredictionForTextMutation()
+            delete(using: level)
         case .predictionSelected(let word):
             applyPrediction(word)
         case .spacer:
@@ -217,8 +213,6 @@ final class KeyboardViewController: UIInputViewController {
 
     private func cancelPredictionForTextMutation() {
         predictionGeneration += 1
-        predictionWorkItem?.cancel()
-        predictionWorkItem = nil
         lastPredictionContextBefore = nil
         latestPrediction = nil
     }
@@ -236,22 +230,21 @@ final class KeyboardViewController: UIInputViewController {
                 insertedText: inserted,
                 contextBefore: textDocumentProxy.documentContextBeforeInput
               ) else { return }
+        cancelPredictionForTextMutation()
         for _ in 0..<inserted.count {
             textDocumentProxy.deleteBackward()
         }
         if let restore, !restore.isEmpty {
             textDocumentProxy.insertText(restore)
         }
-        cancelPredictionForTextMutation()
     }
 
     private func disablePredictionsIfNeeded() {
-        guard predictionWorkItem != nil ||
-                lastPredictionContextBefore != nil ||
+        guard lastPredictionContextBefore != nil ||
                 latestPrediction != nil ||
                 qwertyView.hasVisibleCandidates else { return }
         cancelPredictionForTextMutation()
-        qwertyView.showCandidates(.hidden)
+        qwertyView.showCandidates(.hidden, animated: false)
     }
 
     private func schedulePredictions(before: String?) {
@@ -263,37 +256,24 @@ final class KeyboardViewController: UIInputViewController {
         lastPredictionContextBefore = before
 
         predictionGeneration += 1
-        predictionWorkItem?.cancel()
         let generation = predictionGeneration
-        let engine = wordPredictionEngine
-        var workItem: DispatchWorkItem?
-        workItem = DispatchWorkItem { [weak self] in
-            guard let self,
-                  workItem?.isCancelled == false,
-                  let context = TextContextParser.parse(before: before, after: nil) else { return }
-            let predictions = engine.predict(for: context)
-            guard workItem?.isCancelled == false else { return }
-            DispatchQueue.main.async { [weak self] in
-                guard let self,
-                      generation == self.predictionGeneration,
-                      self.state.mode == .letters else { return }
-                guard !predictions.isEmpty else {
-                    self.latestPrediction = nil
-                    self.qwertyView.showCandidates(.hidden)
-                    return
-                }
-                self.latestPrediction = PredictionDisplayRecord(
-                    replacementCount: context.replacementCount,
-                    expectedSuffix: context.currentWord,
-                    generation: generation
-                )
-                self.qwertyView.showCandidates(.predictions(predictions.map(\.word)))
-            }
+        guard let context = TextContextParser.parse(before: before, after: nil) else {
+            latestPrediction = nil
+            qwertyView.showCandidates(.hidden)
+            return
         }
-        predictionWorkItem = workItem
-        if let workItem {
-            predictionQueue.async(execute: workItem)
+        let predictions = wordPredictionEngine.predict(for: context)
+        guard !predictions.isEmpty else {
+            latestPrediction = nil
+            qwertyView.showCandidates(.hidden)
+            return
         }
+        latestPrediction = PredictionDisplayRecord(
+            replacementCount: context.replacementCount,
+            expectedSuffix: context.currentWord,
+            generation: generation
+        )
+        qwertyView.showCandidates(.predictions(predictions.map(\.word)))
     }
 
     private func applyPrediction(_ word: String) {

@@ -287,6 +287,65 @@ final class TapTypingPerformanceTests: XCTestCase {
     }
 }
 
+final class SuggestionBarStateTests: XCTestCase {
+    private func makeView() -> QwertyKeyboardView {
+        let view = QwertyKeyboardView(frame: CGRect(x: 0, y: 0, width: 390, height: 300))
+        view.update(
+            state: KeyboardState(),
+            theme: .light,
+            size: view.bounds.size,
+            returnKeyTitle: "return"
+        )
+        return view
+    }
+
+    func testCandidateBarAppearsForPredictionsAndHidesForHidden() {
+        let view = makeView()
+
+        view.showCandidates(.predictions(["the", "this", "that"]), animated: false)
+        XCTAssertTrue(view.hasVisibleCandidates)
+        XCTAssertTrue(view.suggestionBarIsVisible)
+
+        view.showCandidates(.hidden, animated: false)
+        XCTAssertFalse(view.hasVisibleCandidates)
+        XCTAssertFalse(view.suggestionBarIsVisible)
+    }
+
+    func testPartialCandidateSetStillShowsTheBar() {
+        let view = makeView()
+
+        view.showCandidates(.predictions(["the"]), animated: false)
+        XCTAssertTrue(view.hasVisibleCandidates)
+        XCTAssertTrue(view.suggestionBarIsVisible)
+    }
+
+    func testEmptyPredictionsKeepTheBarHidden() {
+        let view = makeView()
+
+        view.showCandidates(.predictions([]), animated: false)
+        XCTAssertFalse(view.suggestionBarIsVisible)
+    }
+
+    func testSwitchingModesDoesNotLeaveAnEmptyCandidateBar() {
+        let view = makeView()
+        view.showCandidates(.predictions(["the", "this", "that"]), animated: false)
+        XCTAssertTrue(view.suggestionBarIsVisible)
+
+        var emojiState = KeyboardState()
+        emojiState.mode = .emoji
+        view.update(state: emojiState, theme: .light, size: view.bounds.size, returnKeyTitle: "return")
+
+        var lettersState = KeyboardState()
+        lettersState.mode = .letters
+        view.update(state: lettersState, theme: .light, size: view.bounds.size, returnKeyTitle: "return")
+
+        XCTAssertFalse(
+            view.suggestionBarIsVisible,
+            "Returning to letters must not flash an empty suggestion bar"
+        )
+    }
+}
+
 private struct FakePredictionDictionary: WordPredictionDictionaryProviding {
     let words: [DictionaryWord]
     let bigrams: [String: [String]]
