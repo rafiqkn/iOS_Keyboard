@@ -169,12 +169,14 @@ final class KeyboardViewController: UIInputViewController {
     private func handle(_ action: KeyboardKeyAction) {
         switch action {
         case .character(let text):
-            // Invalidate stale suggestions BEFORE the mutation: the insertion's
-            // own textDidChange re-schedules predictions for the new context.
+            // Invalidate stale suggestions BEFORE the mutation: the refresh
+            // below re-schedules predictions for the new context directly,
+            // without depending on host textDidChange delivery timing.
             cancelPredictionForTextMutation()
             insertText(text)
             pendingInsertionText = text
             pendingInsertionRestoreText = nil
+            refreshPredictionsAfterMutation()
             if state.mode == .letters && state.shift == .on {
                 state.shift = .off
                 qwertyView.updateShift(state.shift)
@@ -184,15 +186,18 @@ final class KeyboardViewController: UIInputViewController {
         case .backspace:
             cancelPredictionForTextMutation()
             textDocumentProxy.deleteBackward()
+            refreshPredictionsAfterMutation()
             playInputClick()
         case .space:
             cancelPredictionForTextMutation()
             pendingInsertionText = insertSpace()
+            refreshPredictionsAfterMutation()
         case .retractLastInsert:
             retractPendingInsertion()
         case .returnKey:
             cancelPredictionForTextMutation()
             insertText("\n")
+            refreshPredictionsAfterMutation()
             if state.mode == .letters && state.shift != .capsLock {
                 state.shift = .on
                 qwertyView.updateShift(state.shift)
@@ -204,11 +209,23 @@ final class KeyboardViewController: UIInputViewController {
         case .gestureDelete(let level):
             cancelPredictionForTextMutation()
             delete(using: level)
+            refreshPredictionsAfterMutation()
         case .predictionSelected(let word):
             applyPrediction(word)
         case .spacer:
             break
         }
+    }
+
+    /// Recomputes suggestions from the document proxy right after this
+    /// keyboard mutated the text. The proxy reflects inserts/deletes
+    /// synchronously, so the bar is always correct the moment a finger
+    /// lifts — no reliance on the host's textDidChange callback. The
+    /// textDidChange path remains as a backup for edits made outside this
+    /// keyboard; the lastPredictionContextBefore guard deduplicates.
+    private func refreshPredictionsAfterMutation() {
+        guard themeManager.interactionSettings.predictionEnabled else { return }
+        schedulePredictions(before: textDocumentProxy.documentContextBeforeInput)
     }
 
     private func cancelPredictionForTextMutation() {
@@ -237,6 +254,7 @@ final class KeyboardViewController: UIInputViewController {
         if let restore, !restore.isEmpty {
             textDocumentProxy.insertText(restore)
         }
+        refreshPredictionsAfterMutation()
     }
 
     private func disablePredictionsIfNeeded() {
@@ -297,6 +315,7 @@ final class KeyboardViewController: UIInputViewController {
         latestPrediction = nil
         qwertyView.showCandidates(.hidden)
         playInputClick()
+        refreshPredictionsAfterMutation()
     }
 
     private func delete(using level: GestureDeletionLevel) {
