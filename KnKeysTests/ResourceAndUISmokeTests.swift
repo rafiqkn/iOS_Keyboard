@@ -71,4 +71,29 @@ final class UIKitComponentSmokeTests: XCTestCase {
         XCTAssertEqual(view.backgroundColor, KeyboardTheme.dark.keyboardBackground.uiColor)
         XCTAssertFalse(view.hasAmbiguousLayout)
     }
+
+    func testClipboardViewAppliesThemeWithoutAmbiguousLayout() {
+        let view = ClipboardKeyboardView(frame: CGRect(x: 0, y: 0, width: 390, height: 294))
+        view.reloadHistory()
+        view.updateAppearance(theme: .dark)
+        view.layoutIfNeeded()
+
+        XCTAssertEqual(view.backgroundColor, KeyboardTheme.dark.keyboardBackground.uiColor)
+        XCTAssertFalse(view.hasAmbiguousLayout)
+    }
+
+    func testSuggestionBarWithSettingsAndClipboardButtonsLaysOut() {
+        let view = QwertyKeyboardView(frame: CGRect(x: 0, y: 0, width: 390, height: 300))
+        view.update(
+            state: KeyboardState(),
+            theme: .light,
+            size: view.bounds.size,
+            returnKeyTitle: "return"
+        )
+        view.showCandidates(.predictions(["the", "this", "that"]), animated: false)
+        view.layoutIfNeeded()
+
+        XCTAssertFalse(view.hasAmbiguousLayout)
+        XCTAssertTrue(view.suggestionBarIsVisible)
+    }
 }

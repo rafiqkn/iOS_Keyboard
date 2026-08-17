@@ -17,6 +17,12 @@ final class KeyboardViewController: UIInputViewController {
         view.delegate = self
         return view
     }()
+    private lazy var clipboardView: ClipboardKeyboardView = {
+        let view = ClipboardKeyboardView()
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.delegate = self
+        return view
+    }()
 
     private var state = KeyboardState()
     private var heightConstraint: NSLayoutConstraint?
@@ -87,7 +93,7 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func installKeyboardView(_ keyboardView: UIView) {
-        for subview in view.subviews where subview === qwertyView || subview === emojiView {
+        for subview in view.subviews where subview === qwertyView || subview === emojiView || subview === clipboardView {
             subview.removeFromSuperview()
         }
         view.addSubview(keyboardView)
@@ -107,14 +113,19 @@ final class KeyboardViewController: UIInputViewController {
         latestPrediction = nil
         qwertyView.showCandidates(.hidden, animated: false)
         qwertyView.cancelActiveInteractions()
-        if state.mode != .emoji {
+        if state.mode != .emoji && state.mode != .clipboard {
             state.previousTextMode = state.mode
         }
         state.mode = mode
         updateHeight()
-        if mode == .emoji {
+        switch mode {
+        case .emoji:
             installKeyboardView(emojiView)
-        } else {
+        case .clipboard:
+            installKeyboardView(clipboardView)
+            captureCurrentClipboardIfNeeded()
+            clipboardView.reloadHistory()
+        default:
             installKeyboardView(qwertyView)
             if mode == .letters {
                 updateAutomaticShiftIfNeeded(
@@ -125,6 +136,17 @@ final class KeyboardViewController: UIInputViewController {
             }
         }
         updateAppearanceAndLayout()
+    }
+
+    /// Reads the system pasteboard once, while the user is actively opening
+    /// the clipboard panel. No timers or background monitoring are used, and
+    /// the read is skipped entirely when the keyboard has no pasteboard
+    /// access (no Full Access).
+    private func captureCurrentClipboardIfNeeded() {
+        guard let string = UIPasteboard.general.string, !string.isEmpty else { return }
+        let store = ClipboardHistoryStore()
+        guard store.load().first?.text != string else { return }
+        store.add(string)
     }
 
     private func updateHeight() {
@@ -163,6 +185,8 @@ final class KeyboardViewController: UIInputViewController {
         )
         if state.mode == .emoji {
             emojiView.updateAppearance(theme: theme)
+        } else if state.mode == .clipboard {
+            clipboardView.updateAppearance(theme: theme)
         }
     }
 
@@ -206,6 +230,10 @@ final class KeyboardViewController: UIInputViewController {
             setMode(.emoji)
         case .mode(let mode):
             setMode(mode)
+        case .settings:
+            openHostAppSettings()
+        case .clipboard:
+            setMode(.clipboard)
         case .gestureDelete(let level):
             cancelPredictionForTextMutation()
             delete(using: level)
@@ -444,6 +472,14 @@ final class KeyboardViewController: UIInputViewController {
     private func playInputClick() {
         feedbackManager.playKeyClick()
     }
+
+    /// Best-effort hand-off to the host app's settings. Requires the "knkeys"
+    /// URL scheme registered by the container app; fails silently when the
+    /// system forbids extension URL opens (e.g. no Full Access).
+    private func openHostAppSettings() {
+        guard let url = URL(string: "knkeys://") else { return }
+        extensionContext?.open(url) { _ in }
+    }
 }
 
 extension KeyboardViewController: UIInputViewAudioFeedback {
@@ -465,5 +501,15 @@ extension KeyboardViewController: EmojiKeyboardViewDelegate {
 
     func emojiKeyboardViewRequestedTextKeyboard(_ view: EmojiKeyboardView) {
         setMode(state.previousTextMode == .emoji ? .letters : state.previousTextMode)
+    }
+}
+
+extension KeyboardViewController: ClipboardKeyboardViewDelegate {
+    func clipboardKeyboardView(_ view: ClipboardKeyboardView, didTrigger action: KeyboardKeyAction) {
+        handle(action)
+    }
+
+    func clipboardKeyboardViewRequestedTextKeyboard(_ view: ClipboardKeyboardView) {
+        setMode(state.previousTextMode == .clipboard ? .letters : state.previousTextMode)
     }
 }

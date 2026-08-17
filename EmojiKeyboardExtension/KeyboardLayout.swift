@@ -11,6 +11,8 @@ enum KeyboardLayout {
             return symbolRows
         case .emoji:
             return []
+        case .clipboard:
+            return []
         }
     }
 

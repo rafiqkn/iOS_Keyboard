@@ -37,6 +37,12 @@
 		C10000000000000000000002 /* LayoutEmojiAndDeletionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000002 /* LayoutEmojiAndDeletionTests.swift */; };
 		C10000000000000000000003 /* PredictionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000003 /* PredictionTests.swift */; };
 		C1000000000000000000001A /* PredictionEndToEndTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000008 /* PredictionEndToEndTests.swift */; };
+		10000000000000000000001D /* ClipboardHistory.swift in App Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000025 /* ClipboardHistory.swift */; };
+		10000000000000000000001E /* ClipboardHistory.swift in Extension Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000025 /* ClipboardHistory.swift */; };
+		10000000000000000000001F /* ClipboardKeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000026 /* ClipboardKeyboardView.swift */; };
+		C1000000000000000000001B /* ClipboardHistory.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000025 /* ClipboardHistory.swift */; };
+		C1000000000000000000001C /* ClipboardKeyboardView.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000026 /* ClipboardKeyboardView.swift */; };
+		C1000000000000000000001D /* ClipboardHistoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000009 /* ClipboardHistoryTests.swift */; };
 		C10000000000000000000004 /* KeyboardHeightPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20000000000000000000004 /* KeyboardHeightPolicyTests.swift */; };
 		C10000000000000000000005 /* KeyboardTheme.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000016 /* KeyboardTheme.swift */; };
 		C10000000000000000000006 /* KeyboardInteractionSettings.swift in Test Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000020 /* KeyboardInteractionSettings.swift */; };
@@ -112,6 +118,9 @@
 		C20000000000000000000002 /* LayoutEmojiAndDeletionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutEmojiAndDeletionTests.swift; sourceTree = "<group>"; };
 		C20000000000000000000003 /* PredictionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionTests.swift; sourceTree = "<group>"; };
 		C20000000000000000000008 /* PredictionEndToEndTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionEndToEndTests.swift; sourceTree = "<group>"; };
+		200000000000000000000025 /* ClipboardHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHistory.swift; sourceTree = "<group>"; };
+		200000000000000000000026 /* ClipboardKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardKeyboardView.swift; sourceTree = "<group>"; };
+		C20000000000000000000009 /* ClipboardHistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardHistoryTests.swift; sourceTree = "<group>"; };
 		C20000000000000000000004 /* KeyboardHeightPolicyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardHeightPolicyTests.swift; sourceTree = "<group>"; };
 		C20000000000000000000005 /* KnKeysTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KnKeysTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C20000000000000000000006 /* ResourceAndUISmokeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResourceAndUISmokeTests.swift; sourceTree = "<group>"; };
@@ -178,6 +187,7 @@
 				200000000000000000000019 /* ThemeManager.swift */,
 				600000000000000000000007 /* PredictionAndFeedback */,
 				200000000000000000000004 /* EmojiCatalog.swift */,
+				200000000000000000000026 /* ClipboardKeyboardView.swift */,
 				200000000000000000000005 /* EmojiCell.swift */,
 				200000000000000000000006 /* Info.plist */,
 				200000000000000000000018 /* EmojiKeyboardExtension.entitlements */,
@@ -202,6 +212,7 @@
 			children = (
 				200000000000000000000016 /* KeyboardTheme.swift */,
 				200000000000000000000020 /* KeyboardInteractionSettings.swift */,
+				200000000000000000000025 /* ClipboardHistory.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -216,6 +227,7 @@
 				C20000000000000000000004 /* KeyboardHeightPolicyTests.swift */,
 				C20000000000000000000006 /* ResourceAndUISmokeTests.swift */,
 				C20000000000000000000007 /* ThemeEditorAutoSaveTests.swift */,
+				C20000000000000000000009 /* ClipboardHistoryTests.swift */,
 			);
 			path = KnKeysTests;
 			sourceTree = "<group>";
@@ -361,6 +373,7 @@
 				10000000000000000000000E /* KeyboardTheme.swift in App Sources */,
 				100000000000000000000011 /* ThemeSettingsView.swift in Sources */,
 				100000000000000000000017 /* KeyboardInteractionSettings.swift in App Sources */,
+				10000000000000000000001D /* ClipboardHistory.swift in App Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -382,6 +395,8 @@
 				10000000000000000000001A /* WordPredictionEngine.swift in Sources */,
 				10000000000000000000001B /* KeyPopupPresenter.swift in Sources */,
 				10000000000000000000001C /* KeyboardFeedbackManager.swift in Sources */,
+				10000000000000000000001E /* ClipboardHistory.swift in Extension Sources */,
+				10000000000000000000001F /* ClipboardKeyboardView.swift in Sources */,
 				100000000000000000000004 /* EmojiCatalog.swift in Sources */,
 				100000000000000000000005 /* EmojiCell.swift in Sources */,
 			);
@@ -413,6 +428,9 @@
 				C10000000000000000000017 /* EmojiKeyboardView.swift in Test Sources */,
 				C10000000000000000000018 /* ThemeEditorAutoSaveTests.swift in Sources */,
 				C10000000000000000000019 /* ThemeSettingsView.swift in Test Sources */,
+				C1000000000000000000001B /* ClipboardHistory.swift in Test Sources */,
+				C1000000000000000000001C /* ClipboardKeyboardView.swift in Test Sources */,
+				C1000000000000000000001D /* ClipboardHistoryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -517,6 +535,7 @@
 				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = AH34H7VVG5;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = EmojiKeyboard/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = KnKeys;
 				INFOPLIST_KEY_CFBundleName = KnKeys;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -541,6 +560,7 @@
 				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = AH34H7VVG5;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = EmojiKeyboard/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = KnKeys;
 				INFOPLIST_KEY_CFBundleName = KnKeys;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

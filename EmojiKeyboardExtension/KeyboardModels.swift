@@ -5,6 +5,7 @@ enum KeyboardMode: Equatable {
     case numbers
     case symbols
     case emoji
+    case clipboard
 }
 
 enum ShiftState: Equatable {
@@ -29,6 +30,8 @@ enum KeyboardKeyAction: Equatable {
     case gestureDelete(GestureDeletionLevel)
     case predictionSelected(String)
     case retractLastInsert
+    case settings
+    case clipboard
     case spacer
 }
 

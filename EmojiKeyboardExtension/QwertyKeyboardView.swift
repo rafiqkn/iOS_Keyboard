@@ -24,6 +24,8 @@ final class QwertyKeyboardView: UIView {
     private lazy var keyPopupPresenter = KeyPopupPresenter(container: self)
     private var candidateBarContent = CandidateBarContent.hidden
     private var candidateButtons: [UIButton] = []
+    private var settingsButton: UIButton!
+    private var clipboardButton: UIButton!
     private var candidateHeightConstraint: NSLayoutConstraint!
     private var deleteDelayWorkItem: DispatchWorkItem?
     private var deleteRepeatTimer: Timer?
@@ -51,10 +53,16 @@ final class QwertyKeyboardView: UIView {
             suggestionStack.addArrangedSubview(button)
             return button
         }
+        settingsButton = makeBarButton(systemName: "gearshape", accessibilityLabel: "Settings")
+        settingsButton.addTarget(self, action: #selector(settingsButtonTapped), for: .touchUpInside)
+        clipboardButton = makeBarButton(systemName: "doc.on.clipboard", accessibilityLabel: "Clipboard")
+        clipboardButton.addTarget(self, action: #selector(clipboardButtonTapped), for: .touchUpInside)
         rowsStack.axis = .vertical
         rowsStack.distribution = .fill
         addSubview(rowsStack)
         addSubview(suggestionStack)
+        addSubview(settingsButton)
+        addSubview(clipboardButton)
         candidateHeightConstraint = suggestionStack.heightAnchor.constraint(equalToConstant: 34)
         topConstraint = rowsStack.topAnchor.constraint(equalTo: suggestionStack.bottomAnchor, constant: 2)
         leadingConstraint = rowsStack.leadingAnchor.constraint(equalTo: leadingAnchor)
@@ -66,11 +74,42 @@ final class QwertyKeyboardView: UIView {
             trailingConstraint,
             bottomConstraint,
             suggestionStack.topAnchor.constraint(equalTo: topAnchor, constant: 4),
-            suggestionStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 4),
-            suggestionStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4),
-            candidateHeightConstraint
+            suggestionStack.leadingAnchor.constraint(equalTo: settingsButton.trailingAnchor, constant: 4),
+            suggestionStack.trailingAnchor.constraint(equalTo: clipboardButton.leadingAnchor, constant: -4),
+            candidateHeightConstraint,
+            settingsButton.topAnchor.constraint(equalTo: topAnchor, constant: 4),
+            settingsButton.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 4),
+            settingsButton.widthAnchor.constraint(equalToConstant: 36),
+            settingsButton.heightAnchor.constraint(equalToConstant: 34),
+            clipboardButton.topAnchor.constraint(equalTo: topAnchor, constant: 4),
+            clipboardButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4),
+            clipboardButton.widthAnchor.constraint(equalToConstant: 36),
+            clipboardButton.heightAnchor.constraint(equalToConstant: 34)
         ])
+        updateBarVisibility()
         rebuildRows()
+    }
+
+    private func makeBarButton(systemName: String, accessibilityLabel: String) -> UIButton {
+        let button = UIButton(type: .system)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.setImage(UIImage(systemName: systemName), for: .normal)
+        button.accessibilityLabel = accessibilityLabel
+        button.tintColor = theme.textColor.uiColor
+        button.backgroundColor = theme.functionKeyBackground.uiColor
+        button.layer.cornerRadius = CGFloat(theme.keyCornerRadius)
+        return button
+    }
+
+    /// The ⚙️/📋 bar buttons are part of the suggestion band and only exist in
+    /// letters mode. They stay visible even when there are no predictions to
+    /// show (unlike the prediction stack, which fades with its content).
+    private func updateBarVisibility() {
+        let visible = state.mode == .letters
+        settingsButton.alpha = visible ? 1 : 0
+        clipboardButton.alpha = visible ? 1 : 0
+        settingsButton.isUserInteractionEnabled = visible
+        clipboardButton.isUserInteractionEnabled = visible
     }
 
     required init?(coder: NSCoder) {
@@ -111,6 +150,7 @@ final class QwertyKeyboardView: UIView {
                 candidateBarContent = .hidden
             }
             applyCandidateVisibility(animated: false)
+            updateBarVisibility()
             rebuildRows()
         } else if shiftChanged {
             updateLetterCase()
@@ -292,6 +332,12 @@ final class QwertyKeyboardView: UIView {
             button.setTitleColor(theme.textColor.uiColor, for: .normal)
             button.backgroundColor = theme.suggestionBarColor.uiColor
         }
+        settingsButton.tintColor = theme.textColor.uiColor
+        settingsButton.backgroundColor = theme.functionKeyBackground.uiColor
+        settingsButton.layer.cornerRadius = CGFloat(theme.keyCornerRadius)
+        clipboardButton.tintColor = theme.textColor.uiColor
+        clipboardButton.backgroundColor = theme.functionKeyBackground.uiColor
+        clipboardButton.layer.cornerRadius = CGFloat(theme.keyCornerRadius)
         rowsStack.arrangedSubviews.compactMap { $0 as? UIStackView }.forEach {
             $0.spacing = metrics.keySpacing
         }
@@ -390,6 +436,14 @@ final class QwertyKeyboardView: UIView {
         case .hidden:
             break
         }
+    }
+
+    @objc private func settingsButtonTapped() {
+        delegate?.qwertyKeyboardView(self, didTrigger: .settings)
+    }
+
+    @objc private func clipboardButtonTapped() {
+        delegate?.qwertyKeyboardView(self, didTrigger: .clipboard)
     }
 
     func updateDeletionFeedbackAnimation(enabled: Bool) {
